@@ -189,35 +189,20 @@ namespace Babe.Lua.Intellisense
                     {
                         //So the column field of Location isn't always accurate...
                         //Position and Line are accurate though..
-						try
-						{
-							var startLine = snapShot.GetLineFromLineNumber(startToken.Location.Line);
-							var startLineOffset = startToken.Location.Position - startLine.Start.Position;
+						var startLine = snapShot.GetLineFromLineNumber(startToken.Location.Line);
+						var startLineOffset = startToken.Location.Position - startLine.Start.Position;
 
-							var endLine = snapShot.GetLineFromLineNumber(endToken.Location.Line);
-							var endLineOffset = (endToken.Location.Position + endToken.Length) - endLine.Start.Position;
+						var endLine = snapShot.GetLineFromLineNumber(endToken.Location.Line);
+						var endLineOffset = (endToken.Location.Position + endToken.Length) - endLine.Start.Position;
 
-							var region = new Region();
-							region.StartLine = startToken.Location.Line;
-							region.StartOffset = startLineOffset + startOffset;
+						var region = new Region();
+						region.StartLine = startToken.Location.Line;
+						region.StartOffset = startLineOffset + startOffset;
 
-							region.EndLine = endToken.Location.Line;
-							region.EndOffset = endLineOffset;
+						region.EndLine = endToken.Location.Line;
+						region.EndOffset = endLineOffset;
 
-							regions.Add(region);
-						}
-						catch
-						{
-							StringBuilder sb = new StringBuilder();
-							sb.AppendLine("LuaOutline.FindHiddenRegions cause an exception.");
-							sb.AppendLine("Args:");
-							sb.AppendLine("StartLine:" + startToken.Location.Line + "," + startToken.Location.Column);
-							sb.AppendLine("EndLine:" + endToken.Location.Line + "," + endToken.Location.Column);
-							sb.AppendLine("TextSnapshot Line:" + snapShot.LineCount);
-
-							Package.BabePackage.Setting.LogError(sb.ToString());
-							return;
-						}
+						regions.Add(region);
                     }      
                 }
 
@@ -263,37 +248,22 @@ namespace Babe.Lua.Intellisense
 
                         else if (token.Text.StartsWith("--endregion") && startRegion != null)
                         {
-							try
-							{
-								region = new Region();
-								var startLine = snapShot.GetLineFromLineNumber(startRegion.Location.Line);
-								var startLineOffset = startRegion.Location.Position - startLine.Start.Position;
+							region = new Region();
+							var startLine = snapShot.GetLineFromLineNumber(startRegion.Location.Line);
+							var startLineOffset = startRegion.Location.Position - startLine.Start.Position;
 
-								var endLine = snapShot.GetLineFromLineNumber(token.Location.Line);
-								var endLineOffset = (token.Location.Position + token.Length) - endLine.Start.Position;
+							var endLine = snapShot.GetLineFromLineNumber(token.Location.Line);
+							var endLineOffset = (token.Location.Position + token.Length) - endLine.Start.Position;
 
-								region.StartLine = startRegion.Location.Line;
-								region.StartOffset = startLineOffset;
+							region.StartLine = startRegion.Location.Line;
+							region.StartOffset = startLineOffset;
 
-								region.EndLine = token.Location.Line;
-								region.EndOffset = endLineOffset;
+							region.EndLine = token.Location.Line;
+							region.EndOffset = endLineOffset;
 
-								region.Preview = startRegion.Text.Replace("--region ", "");
+							region.Preview = startRegion.Text.Replace("--region ", "");
 
-								startRegion = null;
-							}
-							catch
-							{
-								StringBuilder sb = new StringBuilder();
-								sb.AppendLine("LuaOutline.FindUserRegions cause an exception.");
-								sb.AppendLine("Args:");
-								sb.AppendLine("StartLine:" + startRegion.Location.Line + "," + startRegion.Location.Column);
-								sb.AppendLine("EndLine:" + token.Location.Line + "," + token.Location.Column);
-								sb.AppendLine("TextSnapshot Line:" + snapShot.LineCount);
-
-								Package.BabePackage.Setting.LogError(sb.ToString());
-								return;
-							}
+							startRegion = null;
                         }
                     }
 
