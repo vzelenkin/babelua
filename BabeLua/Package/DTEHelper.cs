@@ -381,9 +381,7 @@ namespace Babe.Lua.Package
 
             MarkLine(line);
 
-			if (highlight)
-				//HighlightCurrentPosition();
-				HighlightPosition(line, column, length);
+			if (highlight) HighlightPosition(line, column, length);
         }
 
 		public void OpenDocument(string file, bool linkToProject = true)

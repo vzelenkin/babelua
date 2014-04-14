@@ -149,6 +149,10 @@ namespace Babe.Lua.ToolWindows
             if (dia.ShowDialog() == DialogResult.OK)
             {
                 TextBox_LuaExecutablePath.Text = dia.FileName;
+				if (string.IsNullOrWhiteSpace(TextBox_WorkingPath.Text))
+				{
+					TextBox_WorkingPath.Text = Path.GetDirectoryName(dia.FileName);
+				}
             }
         }
 
