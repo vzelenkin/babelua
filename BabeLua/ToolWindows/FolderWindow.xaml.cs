@@ -1,13 +1,16 @@
-﻿using System.Windows;
-using System.Windows.Controls;
-using System.IO;
+﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using System.IO;
 using System.Linq;
+using System.Text;
+using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
-using Babe.Lua.Package;
-using System;
 using System.Windows.Threading;
+using Babe.Lua.DataModel;
+using Babe.Lua.Editor;
+using Babe.Lua.Helper;
+using Babe.Lua.Package;
 
 namespace Babe.Lua.ToolWindows
 {
@@ -46,6 +49,15 @@ namespace Babe.Lua.ToolWindows
             FolderWatcher.Deleted += Folder_Deleted;
             FolderWatcher.Renamed += Folder_Renamed;
             Refresh();
+
+			_timerPreviewDocument = new DispatcherTimer();
+			_timerPreviewDocument.Interval = TimeSpan.FromMilliseconds(1);
+			_timerPreviewDocument.Tick += PreviewDocument;
+
+            //TreeView.Items.IsLiveSorting = true;
+            //TreeView.Items.LiveSortingProperties.Add("Header");
+            //TreeView.Items.SortDescriptions.Add(new System.ComponentModel.SortDescription("IsFolder", System.ComponentModel.ListSortDirection.Descending));
+            //TreeView.Items.SortDescriptions.Add(new System.ComponentModel.SortDescription("Header", System.ComponentModel.ListSortDirection.Ascending));
         }
 
         #region FileSystemWatcher
@@ -88,6 +100,7 @@ namespace Babe.Lua.ToolWindows
 
         private void Folder_Created(object sender, FileSystemEventArgs e)
         {
+			if (!Directory.Exists(e.FullPath)) return;
             var attributes = File.GetAttributes(e.FullPath);
             if (attributes.HasFlag(FileAttributes.Hidden)) return;
 
@@ -101,16 +114,34 @@ namespace Babe.Lua.ToolWindows
 			var oldName = e.OldFullPath.Replace(LuaPath + Path.DirectorySeparatorChar, "");
 			var newName = e.FullPath.Replace(LuaPath + Path.DirectorySeparatorChar, "");
 
-			if (Files.Contains(oldName) && !Files.Contains(newName))
+			if (Files.Contains(oldName))//存在旧文件
 			{
-				AsyncFileChangesToTreeView(oldName, Path.GetFileName(newName), false);
-				Files.Remove(oldName);
+				if (!Files.Contains(newName))//不存在新文件，把旧文件替换为新文件
+				{
+					AsyncFileChangesToTreeView(oldName, Path.GetFileName(newName), false);
+					Files.Remove(oldName);
+					Files.Add(newName);
+				}
+				else//存在新文件。直接删除旧文件。
+				{
+					AsyncFileChangesToTreeView(oldName, null, false);
+					Files.Remove(oldName);
+				}
+			}
+			else if(!Files.Contains(newName))//不存在旧文件，直接添加新文件
+			{
+				if (!File.Exists(e.FullPath)) return;
+				var attributes = File.GetAttributes(e.FullPath);
+				if (attributes.HasFlag(FileAttributes.Hidden)) return;
+				AsyncFileChangesToTreeView(null, newName, false);
 				Files.Add(newName);
 			}
 		}
 
 		private void File_Deleted(object sender, FileSystemEventArgs e)
 		{
+			if (File.Exists(e.FullPath)) return;
+
             var name = e.FullPath.Replace(LuaPath + Path.DirectorySeparatorChar, "");
 
             if (Files.Contains(name))
@@ -123,6 +154,8 @@ namespace Babe.Lua.ToolWindows
 
 		private void File_Created(object sender, FileSystemEventArgs e)
 		{
+			if (!File.Exists(e.FullPath)) return;
+
             var attributes = File.GetAttributes(e.FullPath);
             if (attributes.HasFlag(FileAttributes.Hidden)) return;
 
@@ -182,7 +215,11 @@ namespace Babe.Lua.ToolWindows
                         if (item.FileName == layers.Last()) return;
                     }
                     var file = new FolderWindowItem(layers.Last(), isFolder);
+                    
                     pat.Items.Add(file);
+                    TreeView.Items.SortDescriptions.Clear();
+                    TreeView.Items.SortDescriptions.Add(new System.ComponentModel.SortDescription("IsFolder", System.ComponentModel.ListSortDirection.Descending));
+                    TreeView.Items.SortDescriptions.Add(new System.ComponentModel.SortDescription("Header", System.ComponentModel.ListSortDirection.Ascending));
                 }
             });
 		}
@@ -233,30 +270,37 @@ namespace Babe.Lua.ToolWindows
 
         List<FolderWindowItem> MakeTree(string folder)
         {
-            var list = new List<FolderWindowItem>();
+			var list = new List<FolderWindowItem>();
 
-            foreach (var f in Directory.EnumerateDirectories(folder))
-            {
-                if (File.GetAttributes(f).HasFlag(FileAttributes.Hidden)) continue;
-				var item = new FolderWindowItem(f.Substring(f.LastIndexOf(Path.DirectorySeparatorChar) + 1), true);
-                
-                foreach (var l in MakeTree(Path.Combine(folder, f)))
-                {
-                    item.Items.Add(l);
-                }
-                list.Add(item);
-            }
-
-			foreach (var f in Directory.EnumerateFiles(folder, "*.lua").Where((name) => { return name.ToLower().EndsWith(".lua"); }))
+			try
 			{
-				if (File.GetAttributes(f).HasFlag(FileAttributes.Hidden)) continue;
+				foreach (var f in Directory.EnumerateDirectories(folder))
+				{
+					if (File.GetAttributes(f).HasFlag(FileAttributes.Hidden)) continue;
+					var item = new FolderWindowItem(f.Substring(f.LastIndexOf(Path.DirectorySeparatorChar) + 1), true);
 
-				list.Add(new FolderWindowItem(Path.GetFileName(f)));
+					foreach (var l in MakeTree(Path.Combine(folder, f)))
+					{
+						item.Items.Add(l);
+					}
+					list.Add(item);
+				}
 
-				Files.Add(f.Replace(LuaPath + Path.DirectorySeparatorChar, ""));
+				foreach (var f in Directory.EnumerateFiles(folder, "*.lua").Where((name) => { return name.ToLower().EndsWith(".lua"); }))
+				{
+					if (File.GetAttributes(f).HasFlag(FileAttributes.Hidden)) continue;
+
+					list.Add(new FolderWindowItem(Path.GetFileName(f)));
+
+					Files.Add(f.Replace(LuaPath + Path.DirectorySeparatorChar, ""));
+				}
+
+				return list;
 			}
-
-            return list;
+			catch
+			{
+				return list;
+			}
         }
 
         private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -402,20 +446,14 @@ namespace Babe.Lua.ToolWindows
         private void SetPreviewDocumentTimerStart(string path)
         {
             _strPreviewDocumentPath = path;
-			_timerPreviewDocument = new DispatcherTimer();
-            // 循环间隔时间
-            _timerPreviewDocument.Interval = TimeSpan.FromMilliseconds(1);
-            // 允许Timer执行
 			_timerPreviewDocument.Start();
-            // 定义回调
-			_timerPreviewDocument.Tick += PreviewDocument;
         }
         // timer事件
         private void PreviewDocument(object sender, EventArgs e)
         {
             if (File.Exists(_strPreviewDocumentPath))
             {
-                DTEHelper.Current.PreviewDocument(_strPreviewDocumentPath);
+				EditorManager.PreviewDocument(_strPreviewDocumentPath);
             }
 			_timerPreviewDocument.Stop();
         }
@@ -432,10 +470,6 @@ namespace Babe.Lua.ToolWindows
                     //启动打开文件预览定时器
                     SetPreviewDocumentTimerStart(path);
                 }
-                //else
-                //{
-                //    item.IsExpanded = !item.IsExpanded;
-                //}
             }
         }
 
@@ -515,7 +549,7 @@ namespace Babe.Lua.ToolWindows
                 item.IsSelected = true;
                 item.BringIntoView();
 
-                DTEHelper.Current.OpenDocument(Path.Combine(LuaPath, file));
+				EditorManager.OpenDocument(Path.Combine(LuaPath, file));
             }
 
             TextBox.Text = "Search File";
@@ -583,7 +617,7 @@ namespace Babe.Lua.ToolWindows
 
                         if (File.Exists(path))
                         {
-                            DTEHelper.Current.OpenDocument(path);
+                            EditorManager.OpenDocument(path);
                         }
                     }
                 }
@@ -666,7 +700,7 @@ namespace Babe.Lua.ToolWindows
 				}
 				catch (System.Exception ex)
 				{
-					BabePackage.Setting.LogError(ex);
+					Logger.LogMessage(ex.Message);
 					MessageBox.Show(string.Format("create {0} fail.", edit_txtbox.Text), "Error");
 					(edit_item.Parent as ItemsControl).Items.Remove(edit_item);
 				}
@@ -682,7 +716,7 @@ namespace Babe.Lua.ToolWindows
 				catch (System.Exception ex)
 				{
 					edit_txtbox.Text = oldName;
-					BabePackage.Setting.LogError(ex);
+					Logger.LogMessage(ex.Message);
 					MessageBox.Show("rename fail.", "Error");
 				}
 			}
@@ -741,15 +775,25 @@ namespace Babe.Lua.ToolWindows
                 name = Path.Combine(path, name);
                 if (!isFolder)
                 {
-                    File.Delete(name);
-					RefreshFiles(name.Replace(LuaPath + Path.DirectorySeparatorChar, ""), null);
-                    return true;
+					try
+					{
+						File.Delete(name);
+						RefreshFiles(name.Replace(LuaPath + Path.DirectorySeparatorChar, ""), null);
+						return true;
+					}
+					catch
+					{
+						return false;
+					}
                 }
                 else
                 {
-                    Directory.Delete(name, true);
-					//RefreshFiles(name.Replace(LuaPath + Path.DirectorySeparatorChar, ""), null);
-                    return true;
+					try
+					{
+						Directory.Delete(name, true);
+						return true;
+					}
+					catch { return false; }
                 }
             }
             return false;
@@ -761,7 +805,7 @@ namespace Babe.Lua.ToolWindows
             {
 				var stream = new FileStream(path, FileMode.CreateNew);
 				
-				//检测设置项，确定新建文件的编码格式
+				//此处应当检测设置项，确定新建文件的编码格式
 				//由于不含中文的ANSI和UTF8编码一致，导致此文件会被VS认为是ANSI文件。
 				Encoding encoding;
 				switch (BabePackage.Current.CurrentSetting.Encoding)
@@ -786,7 +830,7 @@ namespace Babe.Lua.ToolWindows
 					{
 						writer.WriteLine(string.Format("--region {0}", Path.GetFileName(path)));
 						writer.WriteLine(string.Format("--Date {0}", System.DateTime.Now.Date.ToShortDateString()));
-						//writer.WriteLine("--此文件由[BabeLua]插件自动生成");
+						writer.WriteLine("--此文件由[BabeLua]插件自动生成");
 						writer.WriteLine();
 						writer.WriteLine();
 						writer.WriteLine();
@@ -860,7 +904,7 @@ namespace Babe.Lua.ToolWindows
         {
             if (e.Key == Key.Down)
             {
-                if (SearchResults.Count > 0)
+                if (SearchResults != null && SearchResults.Count > 0)
                 {
                     if (SearchView.SelectedIndex == -1)
                     {
@@ -875,7 +919,7 @@ namespace Babe.Lua.ToolWindows
             }
             else if (e.Key == Key.Up)
             {
-                if (SearchResults.Count > 0)
+                if (SearchResults != null && SearchResults.Count > 0)
                 {
                     if (SearchView.SelectedIndex > 0)
                     {

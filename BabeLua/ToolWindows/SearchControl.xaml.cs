@@ -1,22 +1,16 @@
-﻿using Babe.Lua.DataModel;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Editor;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+using Babe.Lua.DataModel;
+using Babe.Lua.Editor;
 using Babe.Lua.Package;
 
-namespace Babe.Lua
+namespace Babe.Lua.ToolWindows
 {
     public partial class SearchToolControl : UserControl
     {
@@ -54,10 +48,10 @@ namespace Babe.Lua
             string curFilePath = "";
             foreach (var item in list)
             {
-                if (curFilePath != item.File.File)
+                if (curFilePath != item.File.Path)
                 {
                     brush = GetNextBrush();
-                    curFilePath = item.File.File;
+                    curFilePath = item.File.Path;
                 }
 
                 var ltim = new SearchListItem(item, (++i).ToString().PadRight(4));
@@ -77,10 +71,10 @@ namespace Babe.Lua
             {
                 foreach (var member in item)
                 {
-                    if (curFilePath != member.File.File)
+                    if (curFilePath != member.File.Path)
                     {
                         brush = GetNextBrush();
-                        curFilePath = member.File.File;
+                        curFilePath = member.File.Path;
                     }
 
                     var ltim = new SearchListItem(member, (++i).ToString().PadRight(4));
@@ -101,7 +95,7 @@ namespace Babe.Lua
 
 			if (BabePackage.Setting.ContainsSearchFilter(txt)) return;
 
-			DTEHelper.Current.RefreshSearchWnd(txt, true);
+            BabePackage.WindowManager.RefreshSearchWnd(txt, true);
 		}
 
         private void ListView_MouseDoubleClick(object sender, MouseButtonEventArgs e)
@@ -109,8 +103,8 @@ namespace Babe.Lua
             if (ListView.SelectedItem != null)
             {
                 var item = (SearchListItem)(ListView.SelectedItem);
-                DTEHelper.Current.OpenDocument(item.token.File.File);
-                DTEHelper.Current.GoTo(item.token.File.File, item.token.Line, item.token.Column, item.token.Name.Length, true);
+				EditorManager.OpenDocument(item.token.File.Path);
+				EditorManager.GoTo(item.token.File.Path, item.token.Line, item.token.Column, item.token.Name.Length, true);
 /*                var state = Keyboard.GetKeyStates(Key.LeftCtrl);
                 if (state.HasFlag(KeyStates.Down))
                 {
@@ -124,15 +118,15 @@ namespace Babe.Lua
             {
                 //定位到选择的位置
                 var item = (SearchListItem)(ListView.SelectedItem);
-                
-                DTEHelper.Current.GoTo(item.token.File.File, item.token.Line, item.token.Column, item.token.Name.Length, true);
+
+				EditorManager.GoTo(item.token.File.Path, item.token.Line, item.token.Column, item.token.Name.Length, true);
             }
         }
 
 		private void Button_ClearResult_Click(object sender, RoutedEventArgs e)
 		{
 			ListView.Items.Clear();
-			DTEHelper.Current.RefreshSearchWnd("", false);
+            BabePackage.WindowManager.RefreshSearchWnd("", false);
 		}
 
 		private void Button_Search_Click(object sender, RoutedEventArgs e)

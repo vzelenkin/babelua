@@ -11,6 +11,8 @@ namespace Babe.Lua.DataModel
     {
         public string Name { get; protected set; }
 
+        public string Comment { get; set; }
+
         //所在的位置
         public LuaFile File { get; set; }
 		public int Line { get; protected set; }

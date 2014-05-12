@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Babe.Lua.ToolWindows;
 
 namespace Babe.Lua.Package
 {
@@ -32,7 +33,7 @@ namespace Babe.Lua.Package
             switch (fShow)
             {
                 case (int)__FRAMESHOW.FRAMESHOW_WinHidden:
-                    DTEHelper.Current.SearchWndClosed(wnd);
+                    BabePackage.WindowManager.SearchWndClosed(wnd);
                     break;
                 default:
                     break;

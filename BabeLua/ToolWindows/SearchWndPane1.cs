@@ -10,7 +10,7 @@ using Microsoft.VisualStudio.Shell;
 using Babe.Lua.DataModel;
 using Babe.Lua.Package;
 
-namespace Babe.Lua
+namespace Babe.Lua.ToolWindows
 {
     [Guid(GuidList.SearchWindowString1)]
     public class SearchWndPane1 : ToolWindowPane,ISearchWnd
@@ -45,7 +45,7 @@ namespace Babe.Lua
 					this.Caption = Properties.Resources.SearchlWindowTitle1;
 					wnd.ListView.Items.Clear();
 				}
-				else if (this.CurrentSearchWord == txt) return;
+
 				else
 				{
 					var list = FileManager.Instance.FindReferences(txt, AllFile);

@@ -21,10 +21,28 @@ namespace Babe.Lua.Intellisense
     {
         [Import]
         internal ITextStructureNavigatorSelectorService NavigatorService { get; set; }
+
+        [Import]
+        IGlyphService GlyphService;
         
         public ICompletionSource TryCreateCompletionSource(ITextBuffer textBuffer)
         {
             return new LuaCompletionSource(this, textBuffer);
+        }
+
+        public System.Windows.Media.ImageSource GetImageSource(Type type)
+        {
+            StandardGlyphGroup group;
+            StandardGlyphItem item = StandardGlyphItem.GlyphItemPublic;
+            switch(type.Name)
+            {
+                case "LuaTable": group = StandardGlyphGroup.GlyphGroupClass; break;
+                case "LuaFunction": group = StandardGlyphGroup.GlyphGroupMethod; break;
+                case "LuaMember": group = StandardGlyphGroup.GlyphGroupField; break;
+                default:
+                    group = StandardGlyphGroup.GlyphGroupVariable;break;
+            }
+            return GlyphService.GetGlyph(group, item);
         }
     }
 
@@ -113,7 +131,12 @@ namespace Babe.Lua.Intellisense
 
             foreach (LuaMember s in list)
             {
-                completions.Add(new Completion(s.Name, s.Name, s.GetType().Name + ":" + s.ToString(), null, "icon"));
+                completions.Add(new LuaCompletion(
+                    show : s.Name, 
+                    completion : s.Name, 
+                    description : s.GetType().Name + " : " + s.ToString() + s.Comment, 
+                    icon : _provider.GetImageSource(s.GetType())
+                    ));
             }
 
             return completions.Count > count;
@@ -122,7 +145,7 @@ namespace Babe.Lua.Intellisense
         public bool FillTable(String word, char dot, List<Completion> completions)
         {
             var count = completions.Count;
-
+            
             var table = IntellisenseHelper.GetTable(word);
 
 			if (table != null)
@@ -134,7 +157,12 @@ namespace Babe.Lua.Intellisense
 					{
 						foreach (LuaMember l in list.Value)
 						{
-							completions.Add(new Completion(l.Name, l.Name, list.Key + dot + l.ToString(), null, "icon"));
+
+                            if (completions.Exists((cp) => { return cp.DisplayText == l.Name; }))
+                            {
+                                continue;
+                            }
+                            completions.Add(new Completion(l.Name, l.Name, list.Key + dot + l.ToString() + l.Comment, _provider.GetImageSource(l.GetType()), "icon"));
 						}
 					}
                 }
@@ -146,7 +174,7 @@ namespace Babe.Lua.Intellisense
 						{
 							if (l is LuaFunction)
 							{
-								completions.Add(new Completion(l.Name, l.Name, list.Key + dot + l.ToString(), null, "icon"));
+                                completions.Add(new Completion(l.Name, l.Name, list.Key + dot + l.ToString() + l.Comment, _provider.GetImageSource(l.GetType()), "icon"));
 							}
 						}
 					}
@@ -167,42 +195,6 @@ namespace Babe.Lua.Intellisense
         public void Dispose()
         {
             _disposed = true;
-        }
-    }
-
-    class LuaCompletionSet : CompletionSet
-    {
-        public LuaCompletionSet(string moniker,
-            string displayName,
-            ITrackingSpan applicableTo,
-            IEnumerable<Completion> completions,
-            IEnumerable<Completion> completionBuilders)
-            : base(moniker, displayName, applicableTo, completions, completionBuilders)
-        {
-
-        }
-
-		public override IList<Completion> Completions
-		{
-			get
-			{
-				return base.Completions;
-			}
-		}
-
-        public override void SelectBestMatch()
-        {
-            this.SelectBestMatch(CompletionMatchType.MatchDisplayText, true);
-        }
-
-        public override void Filter()
-        {
-            base.Filter(CompletionMatchType.MatchDisplayText, false);
-        }
-
-        public override void Recalculate()
-        {
-            base.Recalculate();
         }
     }
 }

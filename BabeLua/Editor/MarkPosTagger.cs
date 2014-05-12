@@ -25,7 +25,9 @@ namespace Babe.Lua.Editor
 
         void textView_GotAggregateFocus(object sender, EventArgs e)
         {
-            CurrentTagger = Taggers[sender as ITextView];
+            var view = sender as ITextView;
+            if (Taggers.ContainsKey(view))
+                CurrentTagger = Taggers[view];
         }
 
         public static MarkPosTagger CurrentTagger { get; private set; }

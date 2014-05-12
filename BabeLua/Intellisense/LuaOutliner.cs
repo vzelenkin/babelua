@@ -7,9 +7,10 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Utilities;
 using System.ComponentModel.Composition;
 using System.Threading;
-
 using Babe.Lua.Grammar;
+using Babe.Lua.DataModel;
 using Babe.Lua.Editor;
+using Babe.Lua.Helper;
 
 namespace Babe.Lua.Intellisense
 {
@@ -91,9 +92,9 @@ namespace Babe.Lua.Intellisense
 			{
 				ReParse(e.Snapshot, e.Tree);
 			}
-			catch
+			catch(Exception ex)
 			{
-				Package.BabePackage.Setting.LogError("LuaOutliner.ReParse error.");
+				Logger.LogMessage("LuaOutliner.ReParse error.\r\nPosition : " + ex.TargetSite + "\r\nMessage : " + ex.Message);
 			}
 		}
 
@@ -190,19 +191,19 @@ namespace Babe.Lua.Intellisense
                         //So the column field of Location isn't always accurate...
                         //Position and Line are accurate though..
 						var startLine = snapShot.GetLineFromLineNumber(startToken.Location.Line);
-						var startLineOffset = startToken.Location.Position - startLine.Start.Position;
+                        var startLineOffset = startToken.Location.Position - startLine.Start.Position;
 
 						var endLine = snapShot.GetLineFromLineNumber(endToken.Location.Line);
-						var endLineOffset = (endToken.Location.Position + endToken.Length) - endLine.Start.Position;
+                        var endLineOffset = (endToken.Location.Position + endToken.Length) - endLine.Start.Position;
+                        
+                        var region = new Region();
+                        region.StartLine = startToken.Location.Line;
+                        region.StartOffset = startLineOffset + startOffset;
 
-						var region = new Region();
-						region.StartLine = startToken.Location.Line;
-						region.StartOffset = startLineOffset + startOffset;
+                        region.EndLine = endToken.Location.Line;
+                        region.EndOffset = endLineOffset;
 
-						region.EndLine = endToken.Location.Line;
-						region.EndOffset = endLineOffset;
-
-						regions.Add(region);
+                        regions.Add(region);
                     }      
                 }
 
@@ -218,7 +219,7 @@ namespace Babe.Lua.Intellisense
         /// <param name="regions"></param>
         void FindUserRegions(ITextSnapshot snapShot, Irony.Parsing.ParseTree tree, ref List<Region> regions)
         {
-            Irony.Parsing.Token startRegion = null;
+            Stack<Irony.Parsing.Token> StartRegions = new Stack<Irony.Parsing.Token>();
 
             foreach (var token in tree.Tokens)
             {
@@ -241,29 +242,30 @@ namespace Babe.Lua.Intellisense
                     }
                     else
                     {
-                        if (token.Text.StartsWith("--region ") && startRegion == null)
+                        if (token.Text.StartsWith("--region "))
                         {
-                            startRegion = token;
+                            StartRegions.Push(token);
                         }
 
-                        else if (token.Text.StartsWith("--endregion") && startRegion != null)
+                        else if (token.Text.StartsWith("--endregion") && StartRegions.Count > 0)
                         {
-							region = new Region();
-							var startLine = snapShot.GetLineFromLineNumber(startRegion.Location.Line);
-							var startLineOffset = startRegion.Location.Position - startLine.Start.Position;
+                            region = new Region();
+                            var startRegion = StartRegions.Pop();
+                            var startLine = snapShot.GetLineFromLineNumber(startRegion.Location.Line);
+                            var startLineOffset = startRegion.Location.Position - startLine.Start.Position;
 
-							var endLine = snapShot.GetLineFromLineNumber(token.Location.Line);
-							var endLineOffset = (token.Location.Position + token.Length) - endLine.Start.Position;
+                            var endLine = snapShot.GetLineFromLineNumber(token.Location.Line);
+                            var endLineOffset = (token.Location.Position + token.Length) - endLine.Start.Position;
 
-							region.StartLine = startRegion.Location.Line;
-							region.StartOffset = startLineOffset;
+                            region.StartLine = startRegion.Location.Line;
+                            region.StartOffset = startLineOffset;
 
-							region.EndLine = token.Location.Line;
-							region.EndOffset = endLineOffset;
+                            region.EndLine = token.Location.Line;
+                            region.EndOffset = endLineOffset;
 
-							region.Preview = startRegion.Text.Replace("--region ", "");
-
-							startRegion = null;
+                            region.Preview = startRegion.Text.Replace("--region ", "");
+                            
+                            startRegion = null;
                         }
                     }
 

@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media;
 
-namespace Babe.Lua
+namespace Babe.Lua.ToolWindows
 {
     class SearchListItem
     {
@@ -35,7 +35,7 @@ namespace Babe.Lua
             }
             else
             {
-                Left = string.Format("{4} : {0} - ({1},{2}) : {3}", lm.File.File, lm.Line + 1, lm.Column + 1, lm.Preview.Substring(0, lm.Column).TrimStart(), id);
+                Left = string.Format("{4} : {0} - ({1},{2}) : {3}", lm.File.Path, lm.Line + 1, lm.Column + 1, lm.Preview.Substring(0, lm.Column).TrimStart(), id);
                 Highlight = lm.Name;
                 Right = lm.Preview.Substring(lm.Column + lm.Name.Length);
             }

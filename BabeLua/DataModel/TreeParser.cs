@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Babe.Lua.Grammar;
 using Babe.Lua.Package;
+using Babe.Lua.Helper;
 
 namespace Babe.Lua.DataModel
 {
@@ -18,6 +19,7 @@ namespace Babe.Lua.DataModel
         {
             if (!System.IO.File.Exists(file))
                 return;
+
 			try
 			{
 				FileStream fileStream = System.IO.File.Open(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
@@ -26,41 +28,78 @@ namespace Babe.Lua.DataModel
 				{
 					var parser = new Parser(LuaGrammar.Instance);
 					var tree = parser.Parse(reader.ReadToEnd());
+
+					File = new LuaFile(file, tree.Tokens);
+
 					var root = tree.Root;
 					if (root != null)
 					{
-						File = new LuaFile(file, tree.Tokens);
-						RefreshTree(root);
-						FileManager.Instance.AddFile(File);
+                        UpdateData(root);
 					}
 					else
 					{
 						System.Diagnostics.Debug.Print("***********error***********" + file);
 					}
+
+					FileManager.Instance.AddFile(File);
 				}
 			}
 			catch(Exception e) 
 			{
-				BabePackage.Setting.LogError("open file failed:" + e.GetType().FullName);
+				Logger.LogMessage("HandleFile Failed:" + e.GetType().FullName + ",Method:" + e.TargetSite);
 			}
+        }
+
+        public LuaFile ParseFile(string file)
+        {
+            if (!System.IO.File.Exists(file))
+                return null;
+
+            try
+            {
+                FileStream fileStream = System.IO.File.Open(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+
+                using (StreamReader reader = new StreamReader(fileStream))
+                {
+                    var parser = new Parser(LuaGrammar.Instance);
+                    var tree = parser.Parse(reader.ReadToEnd());
+
+                    File = new LuaFile(file, tree.Tokens);
+
+                    var root = tree.Root;
+                    if (root != null)
+                    {
+                        UpdateData(root);
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.Print("***********error***********" + file);
+                    }
+                }
+
+                return File;
+            }
+            catch (Exception e)
+            {
+                Logger.LogMessage("HandleFile Failed:" + e.GetType().FullName + ",Method:" + e.TargetSite);
+                return null;
+            }
         }
 
         public void Refresh(ParseTree tree)
         {
+            File = new LuaFile(FileManager.Instance.CurrentFile.Path, tree.Tokens);
             var root = tree.Root;
             if (root != null)
             {
-                File = new LuaFile(FileManager.Instance.CurrentFile.File, tree.Tokens); ;
-
-                RefreshTree(root);
-
-                FileManager.Instance.CurrentFile = File;
-
-                System.Diagnostics.Debug.Print("file refreshed.");
+                UpdateData(root);
             }
+            FileManager.Instance.CurrentFile = File;
+
+            System.Diagnostics.Debug.Print("file refreshed.");
         }
 
-        void RefreshTree(ParseTreeNode node)
+        void UpdateData(ParseTreeNode node)
         {
             foreach (var child in node.ChildNodes)
             {
@@ -75,6 +114,7 @@ namespace Babe.Lua.DataModel
                         //var =  Name | prefixexp `[´ exp `]´ | prefixexp `.´ Name
                         //explist = {exp `,´} exp
                         ParseTreeNode var = varlist[i];
+                        
                         ParseTreeNode exp = explist[i];
 
                         #region table.member = xxx | table[member] = xxx
@@ -87,7 +127,7 @@ namespace Babe.Lua.DataModel
                             if (table.ChildNodes[0].Term.Name == LuaTerminalNames.Var && table.ChildNodes[0].ChildNodes.Count == 1)
                             {
                                 var tbname = table.ChildNodes[0].ChildNodes[0].Token.ValueString;
-								
+
                                 var luatable = File.GetTable(tbname);
                                 if (luatable != null)
                                 {
@@ -105,11 +145,11 @@ namespace Babe.Lua.DataModel
                                     {
                                         if (exp.ChildNodes.Count == 1 && exp.ChildNodes[0].Term.Name == LuaTerminalNames.NamelessFunction)
                                         {
-                                            luatable.AddFunction(new LuaFunction(token.ValueString, token.Location.Line, GetFunctionArgs(exp.ChildNodes[0].ChildNodes[1])));
+                                            luatable.Members.Add(HandleNamelessFunction(token, GetComment(var), exp.ChildNodes[0]));
                                         }
                                         else
                                         {
-                                            luatable.Members.Add(new LuaMember(token.ValueString, token.Location.Line, token.Location.Column));
+                                            luatable.Members.Add(new LuaMember(token.ValueString, token.Location.Line, token.Location.Column) { Comment = GetComment(var) });
                                         }
                                         //AddMemToTable(tbname, mename);
                                     }
@@ -119,9 +159,9 @@ namespace Babe.Lua.DataModel
                         #endregion
                         else
                         {
-                            var token = var.ChildNodes[0].Token;
+                            var name = var.ChildNodes[0];
                             exp = exp.ChildNodes[0];
-							HandleAssign(token, exp);
+							HandleAssign(name, exp);
                         }
                     }
                 }
@@ -150,7 +190,7 @@ namespace Babe.Lua.DataModel
 							{
 								var name = namelist[i];
 								var exp = explist[i];
-								HandleAssign(name.Token, exp);
+								HandleAssign(name, exp);
 							}
 						}
 					}
@@ -158,20 +198,20 @@ namespace Babe.Lua.DataModel
 				#endregion
 				else
 				{
-					RefreshTree(child);
+					UpdateData(child);
 				}
             }
         }
 
-		void HandleAssign(Token token, ParseTreeNode exp)
+		void HandleAssign(ParseTreeNode var, ParseTreeNode exp)
 		{
 			if (exp.Term.Name == LuaTerminalNames.NamelessFunction)// name = function(...)
 			{
-				File.Members.Add(new LuaFunction(File, token.ValueString, token.Location.Line, GetFunctionArgs(exp.ChildNodes[1])));
+                File.Members.Add(HandleNamelessFunction(var.Token, GetComment(var), exp));
 			}
 			else if (exp.Term.Name == LuaTerminalNames.TableConstructor)// name = {...}
 			{
-				HandleTableConstructor(token, exp);
+                HandleTableConstructor(var, exp);
 			}
 			//特殊处理一下class和new方法，作为table处理    name = class(..) | name = new(..)
 			else if (exp.Term.Name == LuaTerminalNames.PrefixExpr && exp.ChildNodes[0].Term.Name == LuaTerminalNames.FunctionCall && exp.ChildNodes[0].ChildNodes.Count == 2)
@@ -182,38 +222,44 @@ namespace Babe.Lua.DataModel
 				{
 					var func = exp.ChildNodes[0].Token.ValueString;
 
-					if (func == BabePackage.Setting.ClassDefinition
-						|| func == BabePackage.Setting.ClassConstructor)
-					{
-
-						string ClassName = null;
-						if (args.ChildNodes.Count == 3
-							&& args.ChildNodes[1].ChildNodes.Count > 0
-							&& args.ChildNodes[1].ChildNodes[0].ChildNodes.Count == 1)
-						{
-							exp = args.ChildNodes[1].ChildNodes[0].ChildNodes[0].ChildNodes[0].ChildNodes[0];
-							if (exp.Term.Name == LuaTerminalNames.PrefixExpr
-								&& exp.ChildNodes[0].Term.Name == LuaTerminalNames.Var
-								&& exp.ChildNodes[0].ChildNodes.Count == 1)
-							{
-								ClassName = exp.ChildNodes[0].ChildNodes[0].Token.ValueString;
-							}
-						}
-						//LuaTable father = null;
-						//if (!string.IsNullOrEmpty(ClassName)) father = IntellisenseHelper.GetTable(ClassName);
-						if (ClassName != null)
-						{
-							File.AddTable(new LuaTable(File, ClassName, token.ValueString, token.Location.Line));
-						}
-						else
-						{
-							File.AddTable(new LuaTable(File, token.ValueString, token.Location.Line));
-						}
-					}
-					else
-					{
-						File.Members.Add(new LuaMember(token));
-					}
+									if(func == BabePackage.Setting.ClassDefinition
+										|| func == BabePackage.Setting.ClassConstructor
+                                        || func == "___class___"
+                                        )
+									{
+										
+										string ClassName = null;
+										if (args.ChildNodes.Count == 3
+											&& args.ChildNodes[1].ChildNodes.Count > 0
+											&& args.ChildNodes[1].ChildNodes[0].ChildNodes.Count == 1)
+										{
+											exp = args.ChildNodes[1].ChildNodes[0].ChildNodes[0].ChildNodes[0].ChildNodes[0];
+											if (exp.Term.Name == LuaTerminalNames.PrefixExpr
+												&& exp.ChildNodes[0].Term.Name == LuaTerminalNames.Var
+												&& exp.ChildNodes[0].ChildNodes.Count == 1)
+											{
+												ClassName = exp.ChildNodes[0].ChildNodes[0].Token.ValueString;
+											}
+										}
+										//LuaTable father = null;
+										//if (!string.IsNullOrEmpty(ClassName)) father = IntellisenseHelper.GetTable(ClassName);
+										if (ClassName != null)
+										{
+                                            var table = new LuaTable(File, ClassName, var.Token.ValueString, var.Token.Location.Line);
+                                            table.Comment = GetComment(var);
+                                            File.AddTable(table);
+										}
+										else
+										{
+                                            var table = new LuaTable(File, var.Token.ValueString, var.Token.Location.Line);
+                                            table.Comment = GetComment(var);
+                                            File.AddTable(table);
+										}
+									}
+									else
+									{
+                                        File.Members.Add(new LuaMember(var.Token) { Comment = GetComment(var) });
+									}
 
 					//if (func == Babe.Lua.BabePackage.Setting.ClassDefinition || func == Babe.Lua.BabePackage.Setting.ClassConstructor)
 					//{
@@ -228,13 +274,15 @@ namespace Babe.Lua.DataModel
 			}
 			else
 			{
-				File.Members.Add(new LuaMember(token));
+                File.Members.Add(new LuaMember(var.Token) { Comment = GetComment(var) });
 			}
 		}
 
-        void HandleTableConstructor(Token token, ParseTreeNode node)
+        void HandleTableConstructor(ParseTreeNode name, ParseTreeNode node)
         {
-            var table = new LuaTable(File, token.ValueString, token.Location.Line);
+            var table = new LuaTable(File, name.Token.ValueString, name.Token.Location.Line);
+            table.Comment = GetComment(name);
+            
             var fieldlist = node.ChildNodes[1].ChildNodes[0];
             if (fieldlist.ChildNodes != null && fieldlist.ChildNodes.Count > 0)
             {
@@ -248,9 +296,9 @@ namespace Babe.Lua.DataModel
                     {
                         if (exp.Term.Name == LuaTerminalNames.NamelessFunction)
                         {
-                            table.AddFunction(new LuaFunction(field.ChildNodes[0].Token.Text, field.ChildNodes[0].Token.Location.Line, GetFunctionArgs(exp.ChildNodes[1])));
+                            table.Members.Add(HandleNamelessFunction(field.ChildNodes[0].Token, GetComment(field), exp));
                         }
-                        else table.Members.Add(new LuaMember(field.ChildNodes[0].Token));
+                        else table.Members.Add(new LuaMember(field.ChildNodes[0].Token) { Comment = GetComment(field) });
                     }
                     else if (field.ChildNodes.Count == 5)//[expr] = xxx
                     {
@@ -259,9 +307,9 @@ namespace Babe.Lua.DataModel
                         {
                             if (exp.Term.Name == LuaTerminalNames.NamelessFunction)
                             {
-                                table.AddFunction(new LuaFunction(expr.ChildNodes[0].Token.ValueString, expr.ChildNodes[0].Token.Location.Line, GetFunctionArgs(exp.ChildNodes[1])));
+                                table.Members.Add(HandleNamelessFunction(expr.ChildNodes[0].Token, GetComment(field), exp));
                             }
-                            else table.Members.Add(new LuaMember(expr.ChildNodes[0].Token));
+                            else table.Members.Add(new LuaMember(expr.ChildNodes[0].Token) { Comment = GetComment(expr) });
                         }
                     }
                 }
@@ -285,6 +333,8 @@ namespace Babe.Lua.DataModel
                 FilterChildren(child, name, ref result, level);
             }
 
+            
+
             return;
         }
 
@@ -298,9 +348,11 @@ namespace Babe.Lua.DataModel
 
             var args = GetFunctionArgs(namedfunc.ChildNodes[2]);
 
+            var comment = GetComment(namedfunc);
+
             if (part2.ChildNodes.Count == 0 && part3.ChildNodes.Count == 0)
             {
-                File.Members.Add(new LuaFunction(File, name1.ValueString, name1.Location.Line, args));
+                File.Members.Add(new LuaFunction(File, name1.ValueString, name1.Location.Line, args) { Comment = comment });
             }
             else if (part2.ChildNodes.Count == 1 && part3.ChildNodes.Count == 0)
             {
@@ -308,15 +360,21 @@ namespace Babe.Lua.DataModel
                 {
                     //AddMemToTable(name1, part2.ChildNodes[0].ChildNodes[1].Token.ValueString);
                     var table = File.GetTable(name1.ValueString);
-                    if(table != null) table.AddFunction(new LuaFunction(part2.ChildNodes[0].ChildNodes[1].Token.ValueString, name1.Location.Line, args));
+                    if (table != null) table.Members.Add(new LuaFunction(part2.ChildNodes[0].ChildNodes[1].Token.ValueString, name1.Location.Line, args) { Comment = comment });
                 }
             }
             else if (part2.ChildNodes.Count == 0 && part3.ChildNodes.Count == 2)
             {
                 //AddMemToTable(name1, part3.ChildNodes[1].Token.ValueString);
                 var table = File.GetTable(name1.ValueString);
-                if (table != null) table.AddFunction(new LuaFunction(part3.ChildNodes[1].Token.ValueString, name1.Location.Line, args));
+                if (table != null) table.Members.Add(new LuaFunction(part3.ChildNodes[1].Token.ValueString, name1.Location.Line, args) { Comment = comment });
             }
+        }
+
+        LuaFunction HandleNamelessFunction(Token name, string comment, ParseTreeNode node)
+        {
+            var function = new LuaFunction(name.ValueString, name.Location.Line, GetFunctionArgs(node.ChildNodes[1])) { Comment = comment };
+            return function;
         }
 
         string[] GetFunctionArgs(ParseTreeNode funcBody)
@@ -337,26 +395,29 @@ namespace Babe.Lua.DataModel
             return args.ToArray();
         }
 
-        public static ParseTreeNodeList HandleParseTree(ParseTreeNode node)
+        string GetComment(ParseTreeNode node)
         {
-            ParseTreeNodeList list = new ParseTreeNodeList();
-
-            foreach (var n in node.ChildNodes)
+            bool hasComment = false;
+            StringBuilder sb = new StringBuilder();
+            if(node.Comments != null)
             {
-                if (n.Term.Name.ToLower().Contains("unnamed"))
+                foreach(Token t in node.Comments)
                 {
-                    list.AddRange(HandleParseTree(n));
+                    if (t.Text.StartsWith("--[Comment]"))
+                    {
+                        sb.Length = 0;
+                        hasComment = true;
+                    }
+                    else
+                    {
+                        sb.AppendLine();
+                        sb.Append(t.Text);
+                    }
                 }
-                else
-                {
-                    var chi = HandleParseTree(n);
-                    n.ChildNodes.Clear();
-                    n.ChildNodes.AddRange(chi);
-                    list.Add(n);
-                }
+                if (!hasComment) sb.Length = 0;
             }
-
-            return list;
+            
+            return sb.ToString();
         }
     }
 }

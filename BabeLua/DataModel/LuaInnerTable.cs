@@ -42,7 +42,7 @@ namespace Babe.Lua.DataModel
                 LuaTable lt = new LuaTable(tb.Key, -1);
                 foreach (var st in tb.Value)
                 {
-                    lt.AddFunction(new LuaFunction(st, -1, null));
+                    lt.Members.Add(new LuaFunction(st, -1, null));
                 }
                 this.AddTable(lt);
             }
@@ -51,6 +51,7 @@ namespace Babe.Lua.DataModel
                                 "end","false","for","function","if",
                                 "in","local","nil","not","or",
                                 "repeat","return","then","true","until","while"};
+
             foreach (var str in keywords)
             {
                 this.Members.Add(new LuaMember(str,-1,-1));

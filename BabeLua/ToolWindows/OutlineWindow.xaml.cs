@@ -2,18 +2,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using Babe.Lua.Package;
+using Babe.Lua.Editor;
 
 namespace Babe.Lua.ToolWindows
 {
@@ -116,7 +109,7 @@ namespace Babe.Lua.ToolWindows
                 LuaMember m = item.Header as LuaMember;
                 if (m != null)
                 {
-                    DTEHelper.Current.GoTo(CurrentFile.File, m.Line);
+					EditorManager.GoTo(CurrentFile.Path, m.Line);
 
                     //DTEHelper.Current.PreviewDocument(CurrentFile.File);
                 }
@@ -125,8 +118,6 @@ namespace Babe.Lua.ToolWindows
 
         private void TreeView_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            System.Diagnostics.Debug.WriteLine("double click：" + TreeView.SelectedItem);
-
             if (e.OriginalSource is Grid)
             {
                 return;
@@ -142,7 +133,7 @@ namespace Babe.Lua.ToolWindows
 
                 if (m != null)
                 {
-                    DTEHelper.Current.GoTo(CurrentFile.File, m.Line);
+					EditorManager.GoTo(CurrentFile.Path, m.Line);
                 }
             }
         }
@@ -211,7 +202,7 @@ namespace Babe.Lua.ToolWindows
         {
             if (e.Key == Key.Down)
             {
-                if (SearchResults.Count() > 0)
+                if (SearchResults != null && SearchResults.Count() > 0)
                 {
                     if (ListBox_SearchResult.SelectedIndex == -1)
                     {
@@ -226,7 +217,7 @@ namespace Babe.Lua.ToolWindows
             }
             else if (e.Key == Key.Up)
             {
-                if (SearchResults.Count() > 0)
+                if (SearchResults != null && SearchResults.Count() > 0)
                 {
                     if (ListBox_SearchResult.SelectedIndex > 0)
                     {
@@ -286,7 +277,7 @@ namespace Babe.Lua.ToolWindows
 
                     if (m != null)
                     {
-                        DTEHelper.Current.GoTo(CurrentFile.File, m.Line);
+						EditorManager.GoTo(CurrentFile.Path, m.Line);
                     }
                 }
             }
@@ -305,6 +296,10 @@ namespace Babe.Lua.ToolWindows
             if (TextBox_Search.Text == "Search File")
             {
                 TextBox_Search.Clear();
+            }
+            else
+            {
+                TextBox_Search.SelectAll();
             }
         }
     }

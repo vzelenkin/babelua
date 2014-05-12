@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Media;
-using System.Xml;
 using System.Xml.Linq;
 using Babe.Lua.Editor;
 
@@ -12,13 +11,20 @@ namespace Babe.Lua.Package
 {
 	public static class SettingConstants
 	{
-		public const string Version = "W.1.0.7";
+		public const string Version = "W.1.5.3";
 
 		public const string SettingFolder = "BabeLua";
+        public const string CompletionFolder = "Completion";
+
 		public const string SettingFile = "Setting.xml";
+		public const string KeywordsFile = "KeyWords.xml";
 		public const string UserKeywordsFile = "UserKeyWords.xml";
-		public const string ErrorLogFile = "ErrorLog.txt";
 		public const string GuidFile = "Guid";
+
+        public const string CompletionExampleFile = "example.lua";
+        public const string CompletionLua51File = "lua5.1.lua";
+
+		public const string ErrorLogFile = "ErrorLog.txt";
 
 		public static class SettingKeys
 		{
@@ -33,6 +39,7 @@ namespace Babe.Lua.Package
 
 			public const string UISetting = "UISettings";
 			public const string HideVSView = "HideUselessView";
+			public const string AllowLog = "AllowLog";
 
 			public const string Highlight = "Highlight";
 			public const string Table = "Table";
@@ -67,6 +74,16 @@ namespace Babe.Lua.Package
 			public const string B = "b";
 			public const string User = "User";
 		}
+
+		public static class Default
+		{
+			public const int TableR = 200;
+			public const int TableG = 100;
+			public const int TableB = 0;
+			public const int FuncR = 200;
+			public const int FuncG = 100;
+			public const int FuncB = 0;
+		}
 	}
 
 	class Setting
@@ -95,7 +112,10 @@ namespace Babe.Lua.Package
 
 		public Dictionary<string, LuaSet> LuaSettings { get; private set; }
 
-		public bool IsFirstRun { get; set; }
+        /// <summary>
+        /// 是否初次安装插件
+        /// </summary>
+		public bool IsFirstInstall { get; set; }
 		public string UserGUID { get; private set; }
 
 		public bool HideUselessViews
@@ -114,6 +134,33 @@ namespace Babe.Lua.Package
 			}
 		}
 
+		public bool AllowDebugLog
+		{
+			get
+			{
+				var Element = XMLUISettings.Element(SettingConstants.SettingKeys.AllowLog);
+				if (Element == null) return false;
+				return Element.Value == "1" ? true : false;
+			}
+			set
+			{
+				var Element = XMLUISettings.Element(SettingConstants.SettingKeys.AllowLog);
+				if (Element == null) XMLUISettings.Add(new XElement(SettingConstants.SettingKeys.AllowLog, Convert.ToInt32(value)));
+				else Element.Value = Convert.ToInt32(value).ToString();
+
+                Boyaa.LuaDebug.SetWriteLog(Convert.ToInt32(value));
+			}
+		}
+
+        public event EventHandler<bool> AllowDebugLogChanged;
+        public void OnAllDebugLogChanged()
+        {
+            if (AllowDebugLogChanged != null)
+            {
+                AllowDebugLogChanged(this, AllowDebugLog);
+            }
+        }
+
 		public string ClassDefinition { get; private set; }
 		public string ClassConstructor { get; private set; }
 
@@ -127,7 +174,7 @@ namespace Babe.Lua.Package
 
 			if (!Directory.Exists(dic))
 			{
-				IsFirstRun = true;
+				IsFirstInstall = true;
 				Directory.CreateDirectory(dic);
 			}
 			CreateSettings(dic);
@@ -200,21 +247,23 @@ namespace Babe.Lua.Package
 						new XElement
 						(
 							SettingConstants.SettingKeys.Function,
-							new XAttribute(SettingConstants.KeywordsKeys.R, 0),
-							new XAttribute(SettingConstants.KeywordsKeys.G, 0),
-							new XAttribute(SettingConstants.KeywordsKeys.B, 0)
+							new XAttribute(SettingConstants.KeywordsKeys.R, SettingConstants.Default.FuncR),
+							new XAttribute(SettingConstants.KeywordsKeys.G, SettingConstants.Default.FuncG),
+							new XAttribute(SettingConstants.KeywordsKeys.B, SettingConstants.Default.FuncB)
 						)
 					);
+					KeyWords.Function = Color.FromRgb(SettingConstants.Default.FuncR, SettingConstants.Default.FuncG, SettingConstants.Default.FuncB);
 					XMLHighlight.Add
 					(
 						new XElement
 						(
 							SettingConstants.SettingKeys.Table,
-							new XAttribute(SettingConstants.KeywordsKeys.R, 0),
-							new XAttribute(SettingConstants.KeywordsKeys.G, 0),
-							new XAttribute(SettingConstants.KeywordsKeys.B, 0)
+							new XAttribute(SettingConstants.KeywordsKeys.R, SettingConstants.Default.TableR),
+							new XAttribute(SettingConstants.KeywordsKeys.G, SettingConstants.Default.TableG),
+							new XAttribute(SettingConstants.KeywordsKeys.B, SettingConstants.Default.TableB)
 						)
 					);
+					KeyWords.Table = Color.FromRgb(SettingConstants.Default.TableR, SettingConstants.Default.TableG, SettingConstants.Default.TableB);
 					Doc.Root.Add(XMLHighlight);
 				}
 				else
@@ -230,6 +279,16 @@ namespace Babe.Lua.Package
 						{
 							KeyWords.Table = color;
 						}
+						//为了兼容之前的版本，修改默认值
+						else
+						{
+							table.ReplaceAttributes(
+								new XAttribute(SettingConstants.KeywordsKeys.R, SettingConstants.Default.TableR),
+								new XAttribute(SettingConstants.KeywordsKeys.G, SettingConstants.Default.TableG),
+								new XAttribute(SettingConstants.KeywordsKeys.B, SettingConstants.Default.TableB)
+								);
+							KeyWords.Table = Color.FromRgb(SettingConstants.Default.TableR, SettingConstants.Default.TableG, SettingConstants.Default.TableB);
+						}
 					}
 					else
 					{
@@ -238,11 +297,12 @@ namespace Babe.Lua.Package
 							new XElement
 							(
 								SettingConstants.SettingKeys.Table,
-								new XAttribute(SettingConstants.KeywordsKeys.R, 0),
-								new XAttribute(SettingConstants.KeywordsKeys.G, 0),
-								new XAttribute(SettingConstants.KeywordsKeys.B, 0)
+								new XAttribute(SettingConstants.KeywordsKeys.R, SettingConstants.Default.TableR),
+								new XAttribute(SettingConstants.KeywordsKeys.G, SettingConstants.Default.TableG),
+								new XAttribute(SettingConstants.KeywordsKeys.B, SettingConstants.Default.TableB)
 							)
 						);
+						KeyWords.Table = Color.FromRgb(SettingConstants.Default.TableR, SettingConstants.Default.TableG, SettingConstants.Default.TableB);
 					}
 					var function = XMLHighlight.Element(SettingConstants.SettingKeys.Function);
 					if (function != null)
@@ -255,6 +315,16 @@ namespace Babe.Lua.Package
 						{
 							KeyWords.Function = color;
 						}
+						//为了兼容之前的版本，修改默认值
+						else
+						{
+							function.ReplaceAttributes(
+								new XAttribute(SettingConstants.KeywordsKeys.R, SettingConstants.Default.FuncR),
+								new XAttribute(SettingConstants.KeywordsKeys.G, SettingConstants.Default.FuncG),
+								new XAttribute(SettingConstants.KeywordsKeys.B, SettingConstants.Default.FuncB)
+								);
+							KeyWords.Function = Color.FromRgb(SettingConstants.Default.FuncR, SettingConstants.Default.FuncG, SettingConstants.Default.FuncB);
+						}
 					}
 					else
 					{
@@ -263,11 +333,12 @@ namespace Babe.Lua.Package
 							new XElement
 							(
 								SettingConstants.SettingKeys.Function,
-								new XAttribute(SettingConstants.KeywordsKeys.R, 0),
-								new XAttribute(SettingConstants.KeywordsKeys.G, 0),
-								new XAttribute(SettingConstants.KeywordsKeys.B, 0)
+								new XAttribute(SettingConstants.KeywordsKeys.R, SettingConstants.Default.FuncR),
+								new XAttribute(SettingConstants.KeywordsKeys.G, SettingConstants.Default.FuncG),
+								new XAttribute(SettingConstants.KeywordsKeys.B, SettingConstants.Default.FuncB)
 							)
 						);
+						KeyWords.Function = Color.FromRgb(SettingConstants.Default.FuncR, SettingConstants.Default.FuncG, SettingConstants.Default.FuncB);
 					}
 				}
 				#endregion
@@ -280,92 +351,76 @@ namespace Babe.Lua.Package
 
 		void CreateSettings(string folder)
 		{
-			var file = Path.Combine(folder, SettingConstants.SettingFile);
-			if (!File.Exists(file))
+			var path = Path.Combine(folder, SettingConstants.SettingFile);
+			if (!File.Exists(path))
 			{
-				using (var stream = File.CreateText(file))
+				using (var stream = File.CreateText(path))
 				{
 					stream.Write(Properties.Resources.Setting);
 				}
 			}
 
-			file = Path.Combine(folder, SettingConstants.UserKeywordsFile);
-			if (!File.Exists(file))
+			path = Path.Combine(folder, SettingConstants.KeywordsFile);
+			if (!File.Exists(path))
 			{
-				using (var stream = File.CreateText(Path.Combine(folder, SettingConstants.UserKeywordsFile)))
+				using (var stream = File.CreateText(path))
+				{
+					stream.Write(Properties.Resources.KeyWords);
+				}
+			}
+
+			path = Path.Combine(folder, SettingConstants.UserKeywordsFile);
+			if (!File.Exists(path))
+			{
+				using (var stream = File.CreateText(path))
 				{
 					stream.Write(Properties.Resources.UserKeyWords);
 				}
 			}
 
-			file = Path.Combine(folder, SettingConstants.GuidFile);
-			if (!File.Exists(file))
+			path = Path.Combine(folder, SettingConstants.GuidFile);
+			if (!File.Exists(path))
 			{
 				UserGUID = Guid.NewGuid().ToString();
 
-				using (var stream = File.CreateText(file))
+				using (var stream = File.CreateText(path))
 				{
 					stream.Write(UserGUID);
 				}
 			}
 			else
 			{
-				using (var stream = new StreamReader(file))
+				using (var stream = new StreamReader(path))
 				{
 					UserGUID = stream.ReadToEnd();
 				}
 			}
+
+            var comp = Path.Combine(folder, SettingConstants.CompletionFolder);
+            if (!Directory.Exists(comp))
+            {
+                Directory.CreateDirectory(comp);
+                path = Path.Combine(comp, SettingConstants.CompletionExampleFile);
+
+                using(var stream = File.CreateText(path))
+                {
+                    var dat = Properties.Resources.CompletionExample;
+                    stream.BaseStream.Write(dat, 0, dat.Length);
+                }
+
+                path = Path.Combine(comp, SettingConstants.CompletionLua51File);
+
+                using (var stream = File.CreateText(path))
+                {
+                    var dat = Properties.Resources.CompletionLua51;
+                    stream.BaseStream.Write(dat, 0, dat.Length);
+                }
+            }
 		}
 
 		public void Save()
 		{
 			Doc.Save(FileName);
-		}
-
-		public void LogError(Exception e)
-		{
-			try
-			{
-				string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), SettingConstants.SettingFolder, SettingConstants.ErrorLogFile);
-				
-				Newtonsoft.Json.Linq.JObject json = new Newtonsoft.Json.Linq.JObject();
-				json["Version"] = SettingConstants.Version;
-				json["Guid"] = UserGUID;
-				json["Type"] = e.GetType().FullName;
-				json["Time"] = DateTime.Now.ToString();
-				json["Position"] = string.Format("{0}--->{1}", e.Source, e.TargetSite);
-				json["Message"] = e.Message;
-				json["StackTrace"] = e.StackTrace;
-				
-				using (StreamWriter writer = new StreamWriter(path, true, new UTF8Encoding(false)))
-				{
-					writer.WriteLine(json.ToString());
-					writer.WriteLine();
-				}
-			}
-			catch { }
-		}
-
-		public void LogError(string message)
-		{
-			try
-			{
-				string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), SettingConstants.SettingFolder, SettingConstants.ErrorLogFile);
-
-				Newtonsoft.Json.Linq.JObject json = new Newtonsoft.Json.Linq.JObject();
-				json["Version"] = SettingConstants.Version;
-				json["Guid"] = UserGUID;
-				json["Type"] = "LogMessage";
-				json["Time"] = DateTime.Now.ToString();
-				json["Message"] = message;
-				
-				using (StreamWriter writer = new StreamWriter(path, true, new UTF8Encoding(false)))
-				{
-					writer.WriteLine(json.ToString());
-					writer.WriteLine();
-				}
-			}
-			catch { }
 		}
 
 		#region OpenFiles
@@ -421,9 +476,26 @@ namespace Babe.Lua.Package
 		#endregion
 
 		#region LuaSetting
-		public void InitLuaSetting()
+		void InitLuaSetting()
 		{
+            if (XMLLuaSettings.Element(SettingConstants.SettingKeys.CurrentSet) == null)
+            {
+                XMLLuaSettings.Add(new XElement(SettingConstants.SettingKeys.CurrentSet));
+            }
+
 			LuaSettings = new Dictionary<string, LuaSet>();
+
+			if (XMLLuaSettings.Elements().Count() > 1 && XMLLuaSettings.Elements(SettingConstants.SettingKeys.Set).Count() == 0)
+			{
+				var node = XMLLuaSettings.FirstNode as XElement;
+				while (node.NextNode != null)
+				{
+					node = node.NextNode as XElement;
+					node.Add(new XElement(SettingConstants.SettingKeys.SetName, node.Name.LocalName));
+					node.Name = SettingConstants.SettingKeys.Set;
+				}
+				Save();
+			}
 
 			List<XElement> invalids = new List<XElement>();
 			foreach (XElement element in XMLLuaSettings.Elements(SettingConstants.SettingKeys.Set))
@@ -666,6 +738,10 @@ namespace Babe.Lua.Package
 
 	class KeyWordSettings
 	{
+
+		public KeyValuePair<Color, HashSet<string>> C { get; private set; }
+		public KeyValuePair<Color, HashSet<string>> Framework { get; private set; }
+
 		public List<KeyValuePair<Color, HashSet<string>>> User { get; private set; }
 
 		public Color Table { get; set; }
@@ -685,10 +761,35 @@ namespace Babe.Lua.Package
 		{
 			string dic = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), SettingConstants.SettingFolder);
 
-			var FileName = Path.Combine(dic, SettingConstants.UserKeywordsFile);
-			if (File.Exists(FileName))
+			var KeywordsFile = Path.Combine(dic, SettingConstants.KeywordsFile);
+
+			if (File.Exists(KeywordsFile))
 			{
-				var Doc = XDocument.Load(FileName);
+				var Doc = XDocument.Load(KeywordsFile);
+				var Ce = Doc.Root.Element(SettingConstants.KeywordsKeys.C);
+				var Lua = Doc.Root.Element(SettingConstants.KeywordsKeys.Lua);
+
+				var color = Color.FromRgb(byte.Parse(Ce.Attribute(SettingConstants.KeywordsKeys.R).Value), byte.Parse(Ce.Attribute(SettingConstants.KeywordsKeys.G).Value), byte.Parse(Ce.Attribute(SettingConstants.KeywordsKeys.B).Value));
+				var list = new HashSet<string>();
+				foreach (XElement xe in Ce.Elements())
+				{
+					list.Add(xe.Value);
+				}
+				C = new KeyValuePair<Color, HashSet<string>>(color, list);
+
+				color = Color.FromRgb(byte.Parse(Lua.Attribute(SettingConstants.KeywordsKeys.R).Value), byte.Parse(Lua.Attribute(SettingConstants.KeywordsKeys.G).Value), byte.Parse(Lua.Attribute(SettingConstants.KeywordsKeys.B).Value));
+				list = new HashSet<string>();
+				foreach (XElement xe in Lua.Elements())
+				{
+					list.Add(xe.Value);
+				}
+				Framework = new KeyValuePair<Color, HashSet<string>>(color, list);
+			}
+
+			var UserKeywordsFile = Path.Combine(dic, SettingConstants.UserKeywordsFile);
+			if (File.Exists(UserKeywordsFile))
+			{
+				var Doc = XDocument.Load(UserKeywordsFile);
 				var Users = Doc.Root.Elements(SettingConstants.KeywordsKeys.User);
 
 				User = new List<KeyValuePair<Color, HashSet<string>>>(Users.Count());

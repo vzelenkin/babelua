@@ -25,6 +25,10 @@ namespace Babe.Lua.Editor
 				}
 				else
 				{
+                    if (i + 2 >= buflen)
+                    {
+                        break;
+                    }
 					int m_rawInt0 = Convert.ToInt16(buffer[i]);
 					int m_rawInt1 = Convert.ToInt16(buffer[i + 1]);
 					int m_rawInt2 = Convert.ToInt16(buffer[i + 2]);

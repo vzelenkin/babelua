@@ -1,18 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.ComponentModel.Composition;
-using Microsoft.VisualStudio.Utilities;
-using Microsoft.VisualStudio.Text.Tagging;
-using Microsoft.VisualStudio.Text.Classification;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Language.StandardClassification;
-using System.Threading;
-using Babe.Lua.DataModel;
-using Irony.Parsing;
-
 using Babe.Lua.Grammar;
+using Irony.Parsing;
+using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Classification;
+using Microsoft.VisualStudio.Text.Tagging;
+using Microsoft.VisualStudio.Utilities;
 
 namespace Babe.Lua.Classification
 {
@@ -54,7 +48,7 @@ namespace Babe.Lua.Classification
     internal sealed class LuaClassifier : ITagger<ClassificationTag>
     {
         ITextBuffer _buffer;
-		LuaGrammar _grammar;
+        Babe.Lua.Grammar.LuaGrammar _grammar;
         Irony.Parsing.Parser _parser;
         
         public event EventHandler<SnapshotSpanEventArgs> TagsChanged;
@@ -104,35 +98,35 @@ namespace Babe.Lua.Classification
                     _lineStates.TryGetValue(i, out state);
 
                     Irony.Parsing.Token token = _parser.Scanner.VsReadToken(ref state);
-                    
-                    while (token != null)
-                    {
-                        if (token.Category == Irony.Parsing.TokenCategory.Content)
-                        {
-                            if (token.EditorInfo != null)
-                            {
-                                ClassificationTag tag;
-                                if (TryGetTag(token, out tag))
-                                {
+
+					while (token != null)
+					{
+						if (token.Category == Irony.Parsing.TokenCategory.Content)
+						{
+							if (token.EditorInfo != null)
+							{
+								ClassificationTag tag;
+								if (TryGetTag(token, out tag))
+								{
 									if (line.Start.Position + token.Location.Position + token.Length <= line.End.Position)
 									{
 										var location = new SnapshotSpan(snapShot, line.Start.Position + token.Location.Position, token.Length);
 										yield return new TagSpan<ClassificationTag>(location, tag);
 									}
-                                }
-                            }
-                        }
-                        else if (token.Category == Irony.Parsing.TokenCategory.Comment)
-                        {
+								}
+							}
+						}
+						else if (token.Category == Irony.Parsing.TokenCategory.Comment)
+						{
 							if (line.Start.Position + token.Location.Position + token.Length == line.End.Position)
 							{
 								var location = new SnapshotSpan(snapShot, line.Start.Position + token.Location.Position, token.Length);
 								yield return new TagSpan<ClassificationTag>(location, HighlightTag.GetTagWithTokenType(TokenType.Comment));
 							}
-                        }
+						}
 
-                        token = _parser.Scanner.VsReadToken(ref state);
-                    }
+						token = _parser.Scanner.VsReadToken(ref state);
+					}
 
                     int oldState = 0;
                     _lineStates.TryGetValue(i + 1, out oldState);

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,13 +10,13 @@ namespace Babe.Lua.DataModel
 {
     class LuaFile:IEquatable<LuaFile>
     {
-        public string File { get; private set; }
+        public string Path { get; private set; }
         public List<LuaMember> Members { get; private set; }
         public TokenList Tokens { get; private set; }
  
-        public LuaFile(string file, TokenList tokens) 
+        public LuaFile(string path, TokenList tokens) 
         {
-            this.File = file;
+            this.Path = path;
             this.Tokens = tokens;
             Members = new List<LuaMember>();
         }
@@ -61,12 +62,13 @@ namespace Babe.Lua.DataModel
 
         public bool Equals(LuaFile other)
         {
-            return this.File.Equals(other.File);
+			//return Path.GetFullPath(File).Equals(Path.GetFullPath(other.File));
+			return this.Path.Equals(other.Path);
         }
 
         public override string ToString()
         {
-            return System.IO.Path.GetFileName(File);
+            return System.IO.Path.GetFileName(Path);
         }
     }
 }

@@ -9,12 +9,12 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Shell;
 using Babe.Lua.Package;
 
-namespace Babe.Lua
+namespace Babe.Lua.ToolWindows
 {
     [Guid(GuidList.SettingWindowString)]
     public class SettingWndPane : ToolWindowPane
     {
-        ToolWindows.SettingWindow wnd;
+        SettingWindow wnd;
         public static SettingWndPane Current;
 
         public SettingWndPane() :
@@ -25,7 +25,7 @@ namespace Babe.Lua
             this.BitmapResourceID = 301;
             this.BitmapIndex = 1;
 
-            wnd = new ToolWindows.SettingWindow();
+            wnd = new SettingWindow();
             base.Content = wnd;
 
             Current = this;

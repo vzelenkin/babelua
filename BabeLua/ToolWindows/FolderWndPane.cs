@@ -9,12 +9,12 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Shell;
 using Babe.Lua.Package;
 
-namespace Babe.Lua
+namespace Babe.Lua.ToolWindows
 {
     [Guid(GuidList.FolderWindowString)]
     public class FolderWndPane : ToolWindowPane
     {
-        ToolWindows.FolderWindow wnd;
+        FolderWindow wnd;
         public static FolderWndPane Current;
         
         public FolderWndPane() :
@@ -25,7 +25,7 @@ namespace Babe.Lua
             this.BitmapResourceID = 301;
             this.BitmapIndex = 1;
 
-            wnd = new ToolWindows.FolderWindow();
+            wnd = new FolderWindow();
             base.Content = wnd;
 
             //this.Frame = DTEHelper.Current.DTE.MainWindow.LinkedWindowFrame;

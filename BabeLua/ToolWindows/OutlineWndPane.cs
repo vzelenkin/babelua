@@ -9,13 +9,13 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Shell;
 using Babe.Lua.Package;
 
-namespace Babe.Lua
+namespace Babe.Lua.ToolWindows
 {
     [Guid(GuidList.OutlineWindowString)]
     public class OutlineWndPane : ToolWindowPane
     {
         public static OutlineWndPane Current;
-        ToolWindows.OutlineWindow wnd;
+        OutlineWindow wnd;
         
         public OutlineWndPane() :
             base(null)
@@ -26,13 +26,10 @@ namespace Babe.Lua
             this.BitmapIndex = 1;
             this.ToolBarLocation = 2;
 
-            this.wnd = new ToolWindows.OutlineWindow();
+            this.wnd = new OutlineWindow();
             base.Content = wnd;
 
-            //this.Frame = DTEHelper.Current.DTE.MainWindow.LinkedWindowFrame;
-            
             Current = this;
-            
         }
 
         public void Refresh()

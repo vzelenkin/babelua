@@ -1,18 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.ComponentModel.Composition;
-using Microsoft.VisualStudio.Utilities;
-using Microsoft.VisualStudio.Text.Tagging;
-using Microsoft.VisualStudio.Text.Classification;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Language.StandardClassification;
-using Microsoft.VisualStudio.Text.Adornments;
+using System.Linq;
 using System.Threading;
-
-using Babe.Lua.Grammar;
 using Babe.Lua.Editor;
+using Babe.Lua.Grammar;
+using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Adornments;
+using Microsoft.VisualStudio.Text.Tagging;
+using Microsoft.VisualStudio.Utilities;
 
 namespace Babe.Lua.Classification
 {
@@ -54,6 +50,38 @@ namespace Babe.Lua.Classification
 		{
 			if (e.Snapshot.TextBuffer != this.buffer) return;
 			ReParse(e.Snapshot, e.Tree);
+		}
+
+		private void ReParse(ITextSnapshot newSnapshot, Irony.Parsing.ParseTree tree)
+		{
+			int previousCount = errorTokens.Count;
+			errorTokens.Clear();
+
+			var newErrors = new List<Irony.Parsing.Token>();
+
+			foreach (var token in tree.Tokens)
+			{
+				if (token.IsError())
+				{
+					errorTokens.Add(token);
+				}
+			}
+
+			if (tree.HasErrors())
+			{
+				var tok = tree.Tokens.Last();
+				errorTokens.Add(tok);
+				msgParse = tree.ParserMessages[0].ToString();
+			}
+			else
+				msgParse = "";
+
+			if (previousCount != 0 || errorTokens.Count != 0)
+			{
+				if (this.TagsChanged != null)
+					this.TagsChanged(this, new SnapshotSpanEventArgs(
+						new SnapshotSpan(newSnapshot, 0, newSnapshot.Length)));
+			}
 		}
 
         public IEnumerable<ITagSpan<LuaErrorTag>> GetTags(NormalizedSnapshotSpanCollection spans)
@@ -101,42 +129,6 @@ namespace Babe.Lua.Classification
                             new LuaErrorTag(msg));
                     }
                 }
-            }
-        }
-
-        private void ReParse(ITextSnapshot newSnapshot, Irony.Parsing.ParseTree tree)
-        {
-            int previousCount = errorTokens.Count;
-            errorTokens.Clear();
-
-            var newErrors = new List<Irony.Parsing.Token>();
-            
-			foreach (var token in tree.Tokens)
-            {
-                if (token.IsError())
-                {
-                    errorTokens.Add(token);
-                }
-            }
-
-            if (tree.HasErrors())
-            {
-                var tok = tree.Tokens.Last();
-                errorTokens.Add(tok);
-                //if (tok.Length != 0)
-                //    errorTokens.Add(tok);
-                //else //it is EOF error so before the end(use -2)
-                //    errorTokens.Add(tree.Tokens[tree.Tokens.Count - 2]);
-                msgParse = tree.ParserMessages[0].ToString();
-            }
-            else
-                msgParse = "";
-
-            if (previousCount != 0 || errorTokens.Count != 0)
-            {
-                if (this.TagsChanged != null)
-                    this.TagsChanged(this, new SnapshotSpanEventArgs(
-                        new SnapshotSpan(newSnapshot, 0, newSnapshot.Length)));
             }
         }
     }

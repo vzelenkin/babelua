@@ -6,7 +6,7 @@ namespace Babe.Lua.Package
 {
     static class GuidList
     {
-        public const string PkgString = "ef2b9b1b-2d16-4088-95d9-904637d77b19";
+		public const string PkgString = "ef2b9b1b-2d16-4088-95d9-904637d77b19";
         public const string CmdString = "f05504a2-fa3b-4cef-83b2-2a16ca67a7c8";
         public const string SearchWindowString1 = "285E3040-39CF-48E6-A4C1-21407730434B";
         public const string SearchWindowString2 = "A058B23C-62C6-4848-9E16-44B4A3A3816B";

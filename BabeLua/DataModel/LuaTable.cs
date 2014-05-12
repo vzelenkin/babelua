@@ -26,11 +26,6 @@ namespace Babe.Lua.DataModel
 			Father = basetable;
 		}
 
-        public void AddFunction(LuaFunction function)
-        {
-            this.Members.Add(function);
-        }
-
 		public string Father { get; private set; }
 
 		public Dictionary<string, List<LuaMember>> GetFullMembers()

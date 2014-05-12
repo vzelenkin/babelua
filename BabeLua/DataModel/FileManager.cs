@@ -5,15 +5,15 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Babe.Lua.Package;
 using Babe.Lua.Grammar;
+using Babe.Lua.Package;
 
 namespace Babe.Lua.DataModel
 {
 	class FileManager
 	{
 		public List<LuaFile> Files { get; private set; }
-
+        
 		public List<LuaMember> CurrentFileToken { get; private set; }
 
 		int _current = -1;
@@ -50,8 +50,8 @@ namespace Babe.Lua.DataModel
 
 		private FileManager()
 		{
-			Files = new List<LuaFile>();
 			CurrentFileToken = new List<LuaMember>();
+			Files = new List<LuaFile>();
 		}
 
 		public void ClearData()
@@ -75,7 +75,7 @@ namespace Babe.Lua.DataModel
 		{
 			for (int i = 0; i < Files.Count; i++)
 			{
-				if (file.Equals(Files[i].File))
+				if (file.Equals(Files[i].Path))
 				{
 					_current = i;
 
@@ -84,6 +84,8 @@ namespace Babe.Lua.DataModel
 					return;
 				}
 			}
+
+            _current = -1;
 		}
 
 		public void RefreshCurrentFile()
@@ -109,7 +111,8 @@ namespace Babe.Lua.DataModel
 			return list;
 		}
 
-		public List<LuaMember> SearchInFile(LuaFile file, string keyword)
+        #region Search Methods
+        public List<LuaMember> SearchInFile(LuaFile file, string keyword)
 		{
 			List<LuaMember> members = new List<LuaMember>();
 
@@ -120,7 +123,7 @@ namespace Babe.Lua.DataModel
 					System.Text.RegularExpressions.Regex reg = new System.Text.RegularExpressions.Regex(System.Text.RegularExpressions.Regex.Escape(keyword));
 					
 					List<string> lines = new List<string>();
-					using (StreamReader sr = new StreamReader(file.File))
+					using (StreamReader sr = new StreamReader(file.Path))
 					{
 						while (sr.Peek() >= 0)
 						{
@@ -166,26 +169,26 @@ namespace Babe.Lua.DataModel
 			List<LuaMember> results = new List<LuaMember>();
 			if (!AllFile)
 			{
-				//var result = Babe.Lua.TextMarker.FindWordTaggerProvider.CurrentTagger.SearchText(keyword);
+				//var result = FindWordTaggerProvider.CurrentTagger.SearchText(keyword);
 				//foreach (var span in result)
 				//{
 				//	var line = span.Start.GetContainingLine();
 				//	var lm = new LuaMember(keyword, line.LineNumber, span.Start - line.Start);
-				//	lm.File = DTEHelper.Current.DTE.ActiveDocument.FullName;
+				//	lm.File = BabePackage.DTEHelper.DTE.ActiveDocument.FullName;
 				//	lm.Preview = line.GetText();
 				//	results.Add(lm);
 				//}
-				DTEHelper.Current.DTE.ActiveDocument.Save();
+				BabePackage.DTEHelper.DTE.ActiveDocument.Save();
 				results = SearchInFile(CurrentFile, keyword);
 			}
 			else
 			{
-				DTEHelper.Current.DTE.Documents.SaveAll();
+				BabePackage.DTEHelper.DTE.Documents.SaveAll();
 				//bool saved = false;
 				//while (!saved)
 				//{
 				//	saved = true;
-				//	foreach (EnvDTE.Document doc in DTEHelper.Current.DTE.Documents)
+				//	foreach (EnvDTE.Document doc in BabePackage.DTEHelper.DTE.Documents)
 				//	{
 				//		if (!doc.Saved)
 				//		{
@@ -198,7 +201,7 @@ namespace Babe.Lua.DataModel
 				//List<LuaMember> members = new List<LuaMember>();
 
 				//HashSet<string> OpenFiles = new HashSet<string>();
-				//foreach (EnvDTE.Document doc in DTEHelper.Current.DTE.Documents)
+				//foreach (EnvDTE.Document doc in BabePackage.DTEHelper.DTE.Documents)
 				//{
 				//	OpenFiles.Add(doc.FullName);
 
@@ -214,66 +217,120 @@ namespace Babe.Lua.DataModel
 
 			return results;
 		}
+        #endregion
 
-		public List<LuaMember> FindDefination(string keyword)
-		{
-			List<LuaMember> members = new List<LuaMember>();
+        #region Find Definition Methods
+        //public List<LuaMember> FindDefination(string keyword)
+        //{
+        //    List<LuaMember> members = new List<LuaMember>();
 
-			string[] keywords = keyword.Split(new char[] { '.', ':' }, StringSplitOptions.RemoveEmptyEntries);
-			if (keywords.Length == 0) return null;
+        //    string[] keywords = keyword.Split(new char[] { '.', ':' }, StringSplitOptions.RemoveEmptyEntries);
+        //    if (keywords.Length == 0) return null;
 
-			for (int i = 0; i < Files.Count; i++)
-			{
-				try
-				{
-					List<string> lines = new List<string>();
-					using (StreamReader sr = new StreamReader(Files[i].File))
-					{
-						while (sr.Peek() >= 0)
-						{
-							lines.Add(sr.ReadLine());
-						}
-					}
+        //    for (int i = 0; i < Files.Count; i++)
+        //    {
+        //        try
+        //        {
+        //            List<string> lines = new List<string>();
+        //            using (StreamReader sr = new StreamReader(Files[i].File))
+        //            {
+        //                while (sr.Peek() >= 0)
+        //                {
+        //                    lines.Add(sr.ReadLine());
+        //                }
+        //            }
 
-					foreach (LuaMember member in Files[i].Members)
-					{
-						if (member is LuaTable)
-						{
-							foreach (LuaMember lm in (member as LuaTable).Members)
-							{
-								if (lm.Name.Equals(keyword))
-								{
-									var lmp = lm.Copy();
-									lmp.Preview = lines[lm.Line];
-									lmp.File = Files[i];
-									members.Add(lmp);
-								}
-							}
-						}
+        //            foreach (LuaMember member in Files[i].Members)
+        //            {
+        //                if (member.Name.Equals(keyword))
+        //                {
+        //                    var lmp = member.Copy();
+        //                    lmp.Preview = lines[member.Line];
+        //                    lmp.File = Files[i];
+        //                    members.Add(lmp);
+        //                }
+        //            }
+        //        }
+        //        catch { }
+        //    }
 
-						if (member.Name.Equals(keyword))
-						{
-							var lmp = member.Copy();
-							lmp.Preview = lines[member.Line];
-							lmp.File = Files[i];
-							members.Add(lmp);
-						}
-					}
-				}
-				catch { }
-			}
+        //    return members;
+        //}
 
-			return members;
-		}
+        public LuaMember FindDefination(string keyword)
+        {
+            LuaMember result = null;
 
-		public IEnumerable<LuaMember> FindReferencesInFile(LuaFile file, string keyword)
+            string[] keywords = keyword.Split(new char[] { '.', ':' }, StringSplitOptions.RemoveEmptyEntries);
+            if (keywords.Length != 0)
+            {
+                foreach(LuaFile file in Files)
+                {
+                    if(TryFindDefinition(file, keywords, out result))
+                    {
+                        break;
+                    }
+                }
+            }
+            return result;
+        }
+
+        bool TryFindDefinition(LuaFile file, string[] keyword, out LuaMember result)
+        {
+            result = null;
+            foreach(var lm in file.Members)
+            {
+                if (TryMatch(lm, keyword, 0, out result))
+                {
+                    result.File = file;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        bool TryMatch(LuaMember tree, string[] keyword, int index, out LuaMember result)
+        {
+            result = null;
+
+            LuaMember _cur = tree;
+
+            if(_cur.Name.Equals(keyword[index]))
+            {
+                if(index == keyword.Length - 1)
+                {
+                    result = _cur;
+                    return true;
+                }
+                else if(_cur is LuaTable)
+                {
+                    foreach(var lm in (_cur as LuaTable).Members)
+                    {
+                        if(TryMatch(lm, keyword, index + 1, out result))
+                        {
+                            return true;
+                        }
+                    }
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            return false;
+        }
+        #endregion
+
+        #region Find References Methods
+        public IEnumerable<LuaMember> FindReferencesInFile(LuaFile file, string keyword)
 		{
 			if (file != null)
 			{
 				List<string> lines = new List<string>();
 				try
 				{
-					using (StreamReader sr = new StreamReader(file.File))
+					using (StreamReader sr = new StreamReader(file.Path))
 					{
 						while (sr.Peek() >= 0)
 						{
@@ -286,16 +343,6 @@ namespace Babe.Lua.DataModel
                     yield break;
                 }
 
-                //for (int i = 0; i < file.Tokens.Count; i++)
-                //{
-                //    if(file.Tokens[i].Text.Equals(keyword))
-                //    {
-                //        var lm = new LuaMember(file.Tokens[i]);
-                //        lm.Preview = lines[lm.Line];
-                //        lm.File = file;
-                //        yield return lm;
-                //    }
-                //}
                 foreach (var token in file.Tokens)
                 {
                     if (token.EditorInfo == null || token.EditorInfo.Type != Irony.Parsing.TokenType.String)
@@ -329,18 +376,19 @@ namespace Babe.Lua.DataModel
 		{
 			if (!AllFile)
 			{
-				DTEHelper.Current.DTE.ActiveDocument.Save();
+				BabePackage.DTEHelper.DTE.ActiveDocument.Save();
 				yield return FindReferencesInFile(CurrentFile, keyword);
 			}
 			else
 			{
-				DTEHelper.Current.DTE.Documents.SaveAll();
+				BabePackage.DTEHelper.DTE.Documents.SaveAll();
 
 				for (int i = 0; i < Files.Count; i++)
 				{
 					yield return FindReferencesInFile(Files[i], keyword);
                 }
 			}
-		}
-	}
+        }
+        #endregion
+    }
 }

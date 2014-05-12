@@ -167,6 +167,21 @@
     <value>..\Resources\UserKeyWords.xml;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>
   <data name="LuaExecutableError" xml:space="preserve">
-    <value>Run Failed. Result is：{0}</value>
+    <value>Run Failed. Result：{0}</value>
+  </data>
+  <data name="KeyWords" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\KeyWords.xml;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  </data>
+  <data name="LoseCurrentSetting" xml:space="preserve">
+    <value>You have to choose a lua folder setting first</value>
+  </data>
+  <data name="Test" xml:space="preserve">
+    <value />
+  </data>
+  <data name="CompletionExample" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\example.lua;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="CompletionLua51" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\lua5.1.lua;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>

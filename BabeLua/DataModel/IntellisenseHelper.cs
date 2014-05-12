@@ -8,7 +8,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
 using Babe.Lua.Package;
-using Microsoft.VisualStudio.Text;
 
 namespace Babe.Lua.DataModel
 {
@@ -18,7 +17,8 @@ namespace Babe.Lua.DataModel
     class IntellisenseHelper
     {
         static FileManager FileManager = FileManager.Instance;
-        static LuaInnerTable InnerTables = LuaInnerTable.Instance;
+        //static LuaFile InnerTables = LuaInnerTable.Instance;
+        static LuaFile InnerTables = OuterCompletionData.Instance;
 
         static bool isScanning = false;
         static bool isBreak = false;
@@ -30,22 +30,26 @@ namespace Babe.Lua.DataModel
 
             if (set == null || string.IsNullOrWhiteSpace(set.Folder) || !Directory.Exists(set.Folder))
             {
-                //FileManager.ClearData();
+                FileManager.ClearData();
                 return;
             }
 
-            if (isScanning)
-            {
-                isBreak = true;
-                // Use the Join method to block the current thread 
-                // until the object's thread terminates.
-                if (_thread != null && _thread.IsAlive)
-                    _thread.Join();
-            }
+            Stop();
 
             _thread = new Thread(Work);
 			_thread.IsBackground = true;
             _thread.Start();
+        }
+
+        public static void Stop()
+        {
+            if (isScanning)
+            {
+                isBreak = true;
+
+                if (_thread != null && _thread.IsAlive)
+                    _thread.Join();
+            }
         }
 
         static void Work()
@@ -55,46 +59,67 @@ namespace Babe.Lua.DataModel
             isScanning = true;
             isBreak = false;
 
-			var names = System.IO.Directory.GetFiles(BabePackage.Current.CurrentSetting.Folder, "*.lua", System.IO.SearchOption.AllDirectories).Where((name) => { return name.ToLower().EndsWith(".lua"); });
+			try
+			{
+				//var names = System.IO.Directory.EnumerateFiles(BabePackage.Current.CurrentSetting.Folder, "*.lua", System.IO.SearchOption.AllDirectories).Where((name) => { return name.ToLower().EndsWith(".lua"); });
+				var names = new List<string>();
+				EnumFiles(BabePackage.Current.CurrentSetting.Folder, "*.lua", names);
+				int count = 0;
 
-            int count = 0;
+				foreach (var name in names)
+				{
+					if (isBreak)
+					{
+						isBreak = false;
+						return;
+					}
+					var tp = new TreeParser();
+					tp.HandleFile(name);
+					BabePackage.DTEHelper.GetStatusBar().Progress(true, "scan", ++count, names.Count());
+				}
+			}
+			finally
+			{
+                isScanning = false;
+                BabePackage.DTEHelper.GetStatusBar().Progress(false);
 
-            foreach (var name in names)
-            {
-                if (isBreak)
-                {
-                    isBreak = false;
-                    return;
-                }
-                var tp = new TreeParser();
-                tp.HandleFile(name);
-                DTEHelper.Current.GetStatusBar().Progress(true, "scan", ++count, names.Count());
-            }
-
-            isScanning = false;
-            DTEHelper.Current.GetStatusBar().Progress(false);
-
-            DTEHelper.Current.RefreshOutlineWnd();
+                BabePackage.WindowManager.RefreshOutlineWnd();
+			}
         }
+
+		static void EnumFiles(string folder, string pattern, List<string> list)
+		{
+			try
+			{
+				list.AddRange(Directory.EnumerateFiles(folder, pattern));
+
+				foreach (var subfolder in Directory.EnumerateDirectories(folder))
+				{
+					EnumFiles(subfolder, pattern, list);
+				}
+			}
+			catch { }
+		}
 
         public static void Refresh(Irony.Parsing.ParseTree tree)
         {
             if (isScanning) return;
-            var file = FileManager.CurrentFile;
-            if (file == null || DTEHelper.Current.DTE.ActiveDocument == null || file.File != DTEHelper.Current.DTE.ActiveDocument.FullName) return;
 
-            if (System.IO.File.Exists(file.File))
+            var file = FileManager.CurrentFile;
+            if (file == null || BabePackage.DTEHelper.DTE.ActiveDocument == null || file.Path != BabePackage.DTEHelper.DTE.ActiveDocument.FullName) return;
+
+            if (System.IO.File.Exists(file.Path))
             {
                 var tp = new TreeParser();
                 tp.Refresh(tree);
 
-                DTEHelper.Current.RefreshEditorOutline();
-                DTEHelper.Current.RefreshOutlineWnd();
+                BabePackage.WindowManager.RefreshEditorOutline();
+                BabePackage.WindowManager.RefreshOutlineWnd();
             }
             else
             {
                 //文件已经被移除
-                IntellisenseHelper.RemoveFile(file.File);
+                IntellisenseHelper.RemoveFile(file.Path);
                 FileManager.CurrentFile = null;
             }
         }
@@ -104,18 +129,24 @@ namespace Babe.Lua.DataModel
             var tp = new TreeParser();
             tp.HandleFile(file);
             FileManager.Instance.SetActiveFile(file);
+            BabePackage.WindowManager.RefreshEditorOutline();
             System.Diagnostics.Debug.Print("Current File is : " + file);
         }
 
         public static void RemoveFile(string file)
         {
+            var curfile = FileManager.CurrentFile;
             for (int i = 0; i < FileManager.Files.Count; i++)
             {
-                if (FileManager.Files[i].File == file)
+                if (FileManager.Files[i].Path == file)
                 {
                     FileManager.Files.RemoveAt(i);
                     break;
                 }
+            }
+            if(curfile != null)
+            {
+                FileManager.SetActiveFile(curfile.Path);
             }
         }
 

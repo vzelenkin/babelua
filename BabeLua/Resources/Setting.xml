@@ -1,5 +1,4 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<!--You should never modify this file by yourself-->
 <Settings>
 	<LuaSettings>
 		<CurrentSet></CurrentSet>
@@ -31,8 +30,8 @@
 	</UISettings>
 	<KeyBinding></KeyBinding>
 	<Highlight>
-		<Table r="0" g="0" b="0"/>
-		<Function r="0" g="0" b="0"/>
+		<Table r="200" g="100" b="0"/>
+		<Function r="200" g="100" b="0"/>
 	</Highlight>
 	<Keywords>
 		<ClassDefinition>class</ClassDefinition>

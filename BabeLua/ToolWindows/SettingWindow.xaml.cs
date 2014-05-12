@@ -1,11 +1,8 @@
-﻿using System.Windows;
-using System.Windows.Controls;
+﻿using System;
 using System.IO;
-using System.Collections.Generic;
-using System.Text;
 using System.Linq;
-using System.Windows.Input;
-using System;
+using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Forms;
 using Babe.Lua.DataModel;
 using Babe.Lua.Editor;
@@ -18,14 +15,14 @@ namespace Babe.Lua.ToolWindows
         public SettingWindow()
         {
             InitializeComponent();
-            CheckBox_HideView.IsChecked = BabePackage.Setting.HideUselessViews;
+			CheckBox_HideView.IsChecked = BabePackage.Setting.HideUselessViews;
+			CheckBox_AllowLog.IsChecked = BabePackage.Setting.AllowDebugLog;
 
             this.Loaded += (s, e) =>
             {
                 InitComboBox();
                 //InitKeyWordsList();
                 //InitTextBoxXml();
-                
 
                 if (!string.IsNullOrWhiteSpace(BabePackage.Setting.CurrentSetting))
                 {
@@ -138,8 +135,15 @@ namespace Babe.Lua.ToolWindows
             string strLuaExecutablePath = TextBox_LuaExecutablePath.Text.Trim();
             if (!string.IsNullOrWhiteSpace(strLuaExecutablePath))
             {
-                dia.InitialDirectory = Path.GetDirectoryName(strLuaExecutablePath);
-                dia.FileName = Path.GetFileName(strLuaExecutablePath);
+                try
+                {
+                    dia.InitialDirectory = Path.GetDirectoryName(strLuaExecutablePath);
+                    dia.FileName = Path.GetFileName(strLuaExecutablePath);
+                }
+                catch
+                {
+                    dia.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                }
             }
             else
             {
@@ -153,6 +157,24 @@ namespace Babe.Lua.ToolWindows
 				{
 					TextBox_WorkingPath.Text = Path.GetDirectoryName(dia.FileName);
 				}
+            }
+        }
+
+        private void Button_WorkingPath_Click(object sender, RoutedEventArgs e)
+        {
+            FolderBrowserDialog dia = new FolderBrowserDialog();
+            if (string.IsNullOrWhiteSpace(TextBox_WorkingPath.Text) || !Directory.Exists(TextBox_WorkingPath.Text))
+            {
+                dia.RootFolder = Environment.SpecialFolder.Desktop;
+            }
+            else
+            {
+                dia.SelectedPath = TextBox_WorkingPath.Text;
+            }
+
+            if (dia.ShowDialog() == DialogResult.OK)
+            {
+                TextBox_WorkingPath.Text = dia.SelectedPath;
             }
         }
 
@@ -192,14 +214,17 @@ namespace Babe.Lua.ToolWindows
                 {
                     return;
                 }
+
+                var oldpath = BabePackage.Current.CurrentSetting == null ? null : BabePackage.Current.CurrentSetting.Folder;
+
                 BabePackage.Setting.AddSetting(name, luapath, TextBox_LuaExecutablePath.Text.Trim(), TextBox_WorkingPath.Text.Trim(), TextBox_CommandLine.Text.Trim(), (EncodingName)ComboBox_FileEncoding.SelectedItem);
                 BabePackage.Setting.Save();
 
                 //如果保存的是当前选择工程且目录发生变化则重新加载
-                if (name == BabePackage.Setting.CurrentSetting && luapath != BabePackage.Setting.GetSetting(name).Folder)
+                if (name == BabePackage.Setting.CurrentSetting && luapath != oldpath)
                 {
                     IntellisenseHelper.Scan();
-                    DTEHelper.Current.UpdateUI();
+                    BabePackage.WindowManager.UpdateUI();
                 }
             }
             else
@@ -231,6 +256,11 @@ namespace Babe.Lua.ToolWindows
                 var name = ComboBox_Settings.SelectedItem.ToString();
                 if (BabePackage.Setting.ContainsSetting(name) && BabePackage.Setting.CurrentSetting != name)
                 {
+                    if(!Directory.Exists(BabePackage.Setting.GetSetting(name).Folder))
+                    {
+                        System.Windows.MessageBox.Show("Script folder not exist, please check it.", "Error");
+                        return;
+                    }
                     BabePackage.Setting.CurrentSetting = name;
                     TextBlock_Select.Text = BabePackage.Setting.CurrentSetting;
 
@@ -238,11 +268,13 @@ namespace Babe.Lua.ToolWindows
 
                     IntellisenseHelper.Scan();
 
-					BabePackage.Current.ShowFolderWindow(null, null);
+					BabePackage.WindowManager.ShowFolderWindow();
 
-                    DTEHelper.Current.UpdateUI();
+                    BabePackage.WindowManager.UpdateUI();
 
                     Button_Select.IsEnabled = false;
+
+                    Babe.Lua.LuaProject.CloseAllTempLuaProject();
                 }
             }
         }
@@ -262,7 +294,7 @@ namespace Babe.Lua.ToolWindows
             {
                 BabePackage.Setting.CurrentSetting = string.Empty;
                 IntellisenseHelper.Scan();
-                DTEHelper.Current.UpdateUI();
+                BabePackage.WindowManager.UpdateUI();
             }
 
             BabePackage.Setting.RemoveSetting(name);
@@ -394,10 +426,16 @@ namespace Babe.Lua.ToolWindows
         }
 
 		#region HyperLinkEventHandlers
+		private void Link_OpenKeywords_Click(object sender, RoutedEventArgs e)
+        {
+            var file = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), SettingConstants.SettingFolder, SettingConstants.KeywordsFile);
+			if (File.Exists(file)) EditorManager.OpenDocument(file, false);
+        }
+
 		private void Link_OpenUserKeywords_Click(object sender, RoutedEventArgs e)
 		{
 			var file = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), SettingConstants.SettingFolder, SettingConstants.UserKeywordsFile);
-			if (File.Exists(file)) DTEHelper.Current.OpenDocument(file, false);
+			if (File.Exists(file)) EditorManager.OpenDocument(file, false);
 		}
 
 		private void Link_OpenSettingFolder_Click(object sender, RoutedEventArgs e)
@@ -415,14 +453,14 @@ namespace Babe.Lua.ToolWindows
 		private void Link_OpenSettings_Click(object sender, RoutedEventArgs e)
 		{
 			var file = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), SettingConstants.SettingFolder, SettingConstants.SettingFile);
-			if (File.Exists(file)) DTEHelper.Current.OpenDocument(file, false);
+			if (File.Exists(file)) EditorManager.OpenDocument(file, false);
 		}
 
 		private void Link_OpenDownload_Click(object sender, RoutedEventArgs e)
 		{
 			try
 			{
-				System.Diagnostics.Process.Start("http://visualstudiogallery.msdn.microsoft.com/32ef797c-4b86-4496-bd43-b42afd289905");
+				System.Diagnostics.Process.Start("https://babelua.codeplex.com");
 			}
 			catch { }
 		}
@@ -446,22 +484,11 @@ namespace Babe.Lua.ToolWindows
 		}
 		#endregion
 
-		private void Button_WorkingPath_Click(object sender, RoutedEventArgs e)
+		private void CheckBox_AllowLog_Checked(object sender, RoutedEventArgs e)
 		{
-			FolderBrowserDialog dia = new FolderBrowserDialog();
-			if (string.IsNullOrWhiteSpace(TextBox_WorkingPath.Text))
-			{
-				dia.RootFolder = Environment.SpecialFolder.Desktop;
-			}
-			else
-			{
-				dia.SelectedPath = TextBox_WorkingPath.Text;
-			}
-
-			if (dia.ShowDialog() == DialogResult.OK)
-			{
-				TextBox_WorkingPath.Text = dia.SelectedPath;
-			}
+			if (!this.IsLoaded) return;
+			BabePackage.Setting.AllowDebugLog = CheckBox_AllowLog.IsChecked.Value;
+			BabePackage.Setting.Save();
 		}
     }
 }

@@ -3,9 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:cur="clr-namespace:Babe.Lua"
-             xmlns:ui="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.11.0"
-             mc:Ignorable="d" 
+             xmlns:ui="clr-namespace:Babe.Lua.ToolWindows"
+             mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="300">
     <UserControl.Resources>
         <ResourceDictionary>
@@ -22,19 +21,20 @@
         </ResourceDictionary>
     </UserControl.Resources>
 
-    <Grid TextBlock.FontSize="12">
+    <Grid TextBlock.FontSize="12"
+          Background="{DynamicResource {x:Static ui:Controls.BackgroundKey}}">
         <Grid.RowDefinitions>
             <RowDefinition Height="25"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <TextBox x:Name="TextBox" Text="Search File" 
-                 InputMethod.IsInputMethodEnabled="False"
                  TextChanged="TextBox_TextChanged"
                  LostFocus="TextBox_LostFocus"
                  GotFocus="TextBox_GotFocus" 
                  PreviewKeyDown="TextBox_Search_KeyDown"
                  VerticalContentAlignment="Center"/>
-        <TreeView x:Name="TreeView" Grid.Row="1" Background="Transparent"
+        <TreeView x:Name="TreeView" Grid.Row="1"
+                  
                   SelectedItemChanged="TreeView_SelectionChanged"
                   RequestBringIntoView="TreeView_RequestBringIntoView" IsTabStop="False">
             <TreeView.ContextMenu>
@@ -52,7 +52,6 @@
                   ItemTemplate="{DynamicResource ListViewItemTemplate}"
                   HorizontalContentAlignment="Stretch"
                   >
-        
         </ListBox>
     </Grid>
 </UserControl>

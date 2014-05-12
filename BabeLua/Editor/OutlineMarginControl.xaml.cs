@@ -1,19 +1,9 @@
 ﻿using Babe.Lua.DataModel;
 using Microsoft.VisualStudio.Text.Editor;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using Babe.Lua.Package;
 
 namespace Babe.Lua.Editor
@@ -29,7 +19,7 @@ namespace Babe.Lua.Editor
         public OutlineMarginControl(IWpfTextViewHost TextViewHost)
         {
             InitializeComponent();
-
+            
             this.TextViewHost = TextViewHost;
 
             this.Loaded += OutlineMarginControl_Loaded;
@@ -81,45 +71,28 @@ namespace Babe.Lua.Editor
 
         void OutlineMarginControl_Loaded(object sender, RoutedEventArgs e)
         {
-			//System.Diagnostics.Debug.Print("document load");
-			//var file = DTEHelper.Current.DTE.ActiveDocument.FullName;
-			//if (!System.IO.File.Exists(file))
-			//{
-			//	//文件已经被移除，我们关闭窗口
-			//	IntellisenseHelper.RemoveFile(file);
-			//	DTEHelper.Current.DTE.ActiveDocument.Close(EnvDTE.vsSaveChanges.vsSaveChangesNo);
-			//	return;
-			//}
+			TextViewHost.HostControl.MouseDoubleClick += HostControl_MouseDoubleClick;
 
-			//DTEHelper.Current.SelectionPage = TextViewHost.TextView.Selection;
-
-			//IntellisenseHelper.SetFile(file);
-
-            TextViewHost.HostControl.MouseDoubleClick += HostControl_MouseDoubleClick;
-
-            Refresh();
-            //DTEHelper.Current.SetStatusBarText(EncodingDecide.DecideFileEncoding(DTEHelper.Current.DTE.ActiveDocument.FullName).ToString());
-
-            //DTEHelper.Current.DTE.ActiveDocument.ActiveWindow.Caption += string.Format("({0})", EncodingDecide.DecideFileEncoding(DTEHelper.Current.DTE.ActiveDocument.FullName).ToString());
+            //Refresh();
         }
 
         private void HostControl_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            if (BabePackage.Setting.IsFirstRun)
+            if (BabePackage.Setting.IsFirstInstall)
             {
-                BabePackage.Setting.IsFirstRun = false;
+                BabePackage.Setting.IsFirstInstall = false;
                 MessageBox.Show("press <Ctrl> key to search words in current file\r\npress <Alt> key to search in all files", "Tips");
                 //DTEHelper.Current.FindSelectTokenRef(false);
                 //DTEHelper.Current.OpenDocument(DTEHelper.Current.DTE.ActiveDocument.FullName);
             }
             else if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
             {
-                DTEHelper.Current.FindSelectTokenRef(false);
+				EditorManager.FindSelectTokenReferences(false);
                 //DTEHelper.Current.OpenDocument(DTEHelper.Current.DTE.ActiveDocument.FullName);
             }
             else if (Keyboard.IsKeyDown(Key.LeftAlt) || Keyboard.IsKeyDown(Key.RightAlt))
             {
-                DTEHelper.Current.FindSelectTokenRef(true);
+				EditorManager.FindSelectTokenReferences(true);
                 //DTEHelper.Current.OpenDocument(DTEHelper.Current.DTE.ActiveDocument.FullName);
             }
         }
@@ -132,7 +105,7 @@ namespace Babe.Lua.Editor
 
                 if(tb is LuaTable) ComboBox_Member.ItemsSource = (tb as LuaTable).Members;
 
-                DTEHelper.Current.GoTo(tb.Line);
+				EditorManager.GoTo(null, tb.Line);
             }
         }
 
@@ -142,7 +115,7 @@ namespace Babe.Lua.Editor
             {
                 var member = ComboBox_Member.SelectedItem as LuaMember;
 
-                DTEHelper.Current.GoTo(member.Line);
+				EditorManager.GoTo(null, member.Line);
             }
         }
     }

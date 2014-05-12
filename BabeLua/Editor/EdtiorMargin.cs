@@ -74,8 +74,6 @@ namespace Babe.Lua.Editor
     {
         public IWpfTextViewMargin CreateMargin(IWpfTextViewHost wpfTextViewHost, IWpfTextViewMargin marginContainer)
         {
-            Babe.Lua.Package.DTEHelper.Current.SelectionPage = wpfTextViewHost.TextView.Selection;
-
             CurrentMargin = new EditorMargin(wpfTextViewHost);
             OutlineMargins.Add(wpfTextViewHost.TextView, CurrentMargin);
 
@@ -87,7 +85,9 @@ namespace Babe.Lua.Editor
 
         void TextView_GotAggregateFocus(object sender, EventArgs e)
         {
-            CurrentMargin = OutlineMargins[sender as ITextView];
+            var view = sender as ITextView;
+            if (OutlineMargins.ContainsKey(view))
+                CurrentMargin = OutlineMargins[view];
         }
 
         void TextView_Closed(object sender, EventArgs e)
