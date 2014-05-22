@@ -56,5 +56,11 @@ namespace Babe.Lua.ToolWindows
                 }
             });
         }
+
+
+        public void SetRelativePathEnable(bool enable)
+        {
+            wnd.Button_RelativePath.IsChecked = enable;
+        }
     }
 }

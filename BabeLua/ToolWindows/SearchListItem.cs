@@ -10,6 +10,8 @@ namespace Babe.Lua.ToolWindows
 {
     class SearchListItem
     {
+        public string Id { get; set; }
+        public string PathBase { get; set; }
         public string Left { get; set; }
         public string Right { get; set; }
         public string Highlight { get; set; }
@@ -23,19 +25,37 @@ namespace Babe.Lua.ToolWindows
 
         public SearchListItem() { }
 
-        public SearchListItem(LuaMember lm, string id)
+        public SearchListItem(LuaMember lm, string id, string pathbase)
         {
             this.token = lm;
+            this.Id = id + ":";
 
             if (lm.Preview == null)
             {
                 Left = lm.ToString();
 				Highlight = string.Empty;
 				Right = string.Empty;
+                PathBase = string.Empty;
             }
             else
             {
-                Left = string.Format("{4} : {0} - ({1},{2}) : {3}", lm.File.Path, lm.Line + 1, lm.Column + 1, lm.Preview.Substring(0, lm.Column).TrimStart(), id);
+                PathBase = pathbase;
+                
+                //no folder setting contains
+                if(string.IsNullOrWhiteSpace(pathbase))
+                {
+                    Left = string.Format("{0} - ({1},{2}) : {3}", lm.File.Path, lm.Line + 1, lm.Column + 1, lm.Preview.Substring(0, lm.Column).TrimStart());
+                }
+                //file does not exists in setting folder
+                else if (!lm.File.Path.StartsWith(pathbase))
+                {
+                    PathBase = string.Empty;
+                    Left = string.Format("{0} - ({1},{2}) : {3}", lm.File.Path, lm.Line + 1, lm.Column + 1, lm.Preview.Substring(0, lm.Column).TrimStart());
+                }
+                else
+                {
+                    Left = string.Format("{0} - ({1},{2}) : {3}", lm.File.Path.Replace(pathbase, ""), lm.Line + 1, lm.Column + 1, lm.Preview.Substring(0, lm.Column).TrimStart());
+                }
                 Highlight = lm.Name;
                 Right = lm.Preview.Substring(lm.Column + lm.Name.Length);
             }

@@ -67,7 +67,7 @@ namespace Babe.Lua.Helper
         internal static SnapshotSpan GetToken(this ITextView view, SnapshotPoint point)
         {
             var snapshot = view.TextSnapshot;
-            if (point >= snapshot.Length || point < 0) throw new ArgumentOutOfRangeException();
+            if (point > snapshot.Length || point < 0) throw new ArgumentOutOfRangeException();
             int start = point, end = point;
             while(start > 0)
             {

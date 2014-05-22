@@ -77,7 +77,10 @@ namespace Babe.Lua.Editor
 		{
 			Irony.Parsing.Parser parser = new Irony.Parsing.Parser(Grammar.LuaGrammar.Instance);
 			var tree = parser.Parse(_cur.TextBuffer.CurrentSnapshot.GetText());
-			OnFileContentChanged(_cur.TextBuffer.CurrentSnapshot, tree);
+
+            //降低文本变化的敏感度，选择性刷新？
+            //if(!tree.HasErrors())
+			    OnFileContentChanged(_cur.TextBuffer.CurrentSnapshot, tree);
 		}
 
 		void view_Closed(object sender, EventArgs e)

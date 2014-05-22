@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Babe.Lua.DataModel
 {
-    class LuaMember : IEquatable<LuaMember>
+    class LuaMember : IEquatable<LuaMember>, IComparable<LuaMember>
     {
         public string Name { get; protected set; }
 
@@ -54,6 +54,12 @@ namespace Babe.Lua.DataModel
         {
             LuaMember mem = new LuaMember(this.Name, this.Line, this.Column);
             return mem;
+        }
+
+
+        public int CompareTo(LuaMember other)
+        {
+            return this.Name.CompareTo(other.Name);
         }
     }
 }

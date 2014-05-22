@@ -34,25 +34,27 @@
                     <GroupBox Margin="-10,30,0,0" Grid.Row="1" HorizontalAlignment="Left" VerticalAlignment="Top" Width="600" Height="315" Header="New folder setting" BorderThickness="0.4" SnapsToDevicePixels="True" Style="{DynamicResource ControlStyle}">
                         <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                             <TextBox x:Name="TextBox_LuaPath" HorizontalAlignment="Left" Height="24" Margin="140,27,0,0" VerticalAlignment="Top" Width="363" VerticalContentAlignment="Center" FontFamily="Latha" FontSize="14"/>
-                            <TextBox x:Name="TextBox_LuaExecutablePath" HorizontalAlignment="Left" Height="24" Margin="140,70,0,0" VerticalAlignment="Top" Width="363" VerticalContentAlignment="Center" FontFamily="Latha" FontSize="14"/>
-                            <TextBox x:Name="TextBox_CommandLine" HorizontalAlignment="Left" Height="24" Margin="140,161,0,0" VerticalAlignment="Top" Width="405" VerticalContentAlignment="Center" FontFamily="Latha" FontSize="14"/>
-                            <TextBlock Text="Lua scripts folder" VerticalAlignment="Top" Margin="23,31,0,0" HorizontalAlignment="Left"/>
-                            <TextBlock Text="Lua exe path" VerticalAlignment="Top" Margin="23,74,0,0" HorizontalAlignment="Left"/>
-                            <TextBlock Text="Command line" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="23,166,0,0"/>
                             <Button Click="Button_LuaPath_Click" Content="..." HorizontalAlignment="Left" Margin="513,27,0,0" VerticalAlignment="Top" Width="32" Height="24"/>
+                            <TextBox x:Name="TextBox_LuaExecutablePath" HorizontalAlignment="Left" Height="24" Margin="140,70,0,0" VerticalAlignment="Top" Width="363" VerticalContentAlignment="Center" FontFamily="Latha" FontSize="14"/>
                             <Button Click="Button_LuaExecutablePath_Click" Content="..." HorizontalAlignment="Left" Margin="513,70,0,0" VerticalAlignment="Top" Width="32" Height="24"/>
+                            <TextBox x:Name="TextBox_WorkingPath" HorizontalAlignment="Left" Height="24" Margin="140,115,0,0" VerticalAlignment="Top" Width="363" VerticalContentAlignment="Center" FontFamily="Latha" FontSize="14"/>
+                            <Button Click="Button_WorkingPath_Click" Content="..." HorizontalAlignment="Left" Margin="513,115,0,0" VerticalAlignment="Top" Width="32" Height="24"/>
+                            <TextBox x:Name="TextBox_CommandLine" HorizontalAlignment="Left" Height="24" Margin="140,161,0,0" VerticalAlignment="Top" Width="405" VerticalContentAlignment="Center" FontFamily="Latha" FontSize="14"/>
                             <TextBox x:Name="TextBox_SettingName" HorizontalAlignment="Left" Height="24" Margin="140,204,0,0" VerticalAlignment="Top" Width="405" VerticalContentAlignment="Center" FontFamily="Latha" FontSize="14"/>
-                            <TextBlock Text="Setting name" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="24,210,0,0"/>
-                            <Button x:Name="Button_Save" Click="Button_Click" Content="Save" HorizontalAlignment="Left" Margin="458,246,0,0" VerticalAlignment="Top" Width="87" Height="24"/>
-                            <TextBlock Text="New file encoding" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="24,251,0,0"/>
+
                             <ComboBox x:Name="ComboBox_FileEncoding" Height="24" Margin="140,246,0,0" SelectedIndex="0" HorizontalAlignment="Left" VerticalAlignment="Top" VerticalContentAlignment="Center" Width="188">
                                 <x:Static Member="local:EncodingName.UTF8"/>
                                 <x:Static Member="local:EncodingName.UTF8_BOM"/>
                                 <x:Static  Member="local:EncodingName.ANSI"/>
                             </ComboBox>
-                            <TextBox x:Name="TextBox_WorkingPath" HorizontalAlignment="Left" Height="24" Margin="140,115,0,0" VerticalAlignment="Top" Width="363" VerticalContentAlignment="Center" FontFamily="Latha" FontSize="14"/>
+                            <Button x:Name="Button_Save" Click="Button_Click" Content="Save" HorizontalAlignment="Left" Margin="458,246,0,0" VerticalAlignment="Top" Width="87" Height="24"/>
+                            <TextBlock Text="Lua scripts folder" VerticalAlignment="Top" Margin="23,31,0,0" HorizontalAlignment="Left"/>
+                            <TextBlock Text="Lua exe path" VerticalAlignment="Top" Margin="23,74,0,0" HorizontalAlignment="Left"/>
                             <TextBlock Text="Working path" VerticalAlignment="Top" Margin="23,119,0,0" HorizontalAlignment="Left"/>
-                            <Button Click="Button_WorkingPath_Click" Content="..." HorizontalAlignment="Left" Margin="513,115,0,0" VerticalAlignment="Top" Width="32" Height="24"/>
+                            <TextBlock Text="Command line" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="23,166,0,0"/>
+                            <TextBlock Text="Setting name" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="24,210,0,0"/>
+                            <TextBlock Text="New file encoding" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="24,251,0,0"/>
+
                         </Grid>
                     </GroupBox>
                     <TextBlock HorizontalAlignment="Left" Margin="0,52,0,0" VerticalAlignment="Top" Text="Choose setting"/>

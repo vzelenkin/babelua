@@ -56,10 +56,18 @@ namespace Babe.Lua.ToolWindows
 				}
             });
         }
+
+
+        public void SetRelativePathEnable(bool enable)
+        {
+            wnd.Button_RelativePath.IsChecked = enable;
+        }
     }
 
     interface ISearchWnd
     {
         void Search(string txt, bool AllFile);
+
+        void SetRelativePathEnable(bool enable);
     }
 }

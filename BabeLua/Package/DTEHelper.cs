@@ -96,6 +96,7 @@ namespace Babe.Lua.Package
 
 		void TextViewCreationListener_FileContentChanged(object sender, FileContentChangedEventArgs e)
 		{
+            if (e.Tree.Root == null) return;
 			IntellisenseHelper.Refresh(e.Tree);
 		}
 

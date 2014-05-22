@@ -33,6 +33,8 @@ namespace Babe.Lua.Intellisense
         ITextSnapshot snapshot;
         List<Region> regions;
 
+        static bool UploadError = true;
+
         public OutliningTagger(ITextBuffer buffer)
         {
             this.buffer = buffer;
@@ -43,7 +45,19 @@ namespace Babe.Lua.Intellisense
 
 			Irony.Parsing.Parser parser = new Irony.Parsing.Parser(LuaGrammar.Instance);
 			var tree = parser.Parse(snapshot.GetText());
-			ReParse(snapshot, tree);
+			
+            try
+            {
+                ReParse(snapshot, tree);
+            }
+            catch (Exception ex)
+            {
+                if (UploadError)
+                {
+                    UploadError = false;
+                    Logger.LogMessage("LuaOutliner.ReParse error.\r\nPosition : " + ex.TargetSite + "\r\nMessage : " + ex.Message);
+                }
+            }
         }
 
         public IEnumerable<ITagSpan<IOutliningRegionTag>> GetTags(NormalizedSnapshotSpanCollection spans)
@@ -88,13 +102,19 @@ namespace Babe.Lua.Intellisense
 		void TextViewCreationListener_FileContentChanged(object sender, FileContentChangedEventArgs e)
 		{
 			if (e.Snapshot.TextBuffer != this.buffer) return;
+            if (e.Tree.Root == null) return;
+            
 			try
 			{
 				ReParse(e.Snapshot, e.Tree);
 			}
 			catch(Exception ex)
 			{
-				Logger.LogMessage("LuaOutliner.ReParse error.\r\nPosition : " + ex.TargetSite + "\r\nMessage : " + ex.Message);
+                if(UploadError)
+                {
+                    UploadError = false;
+				    Logger.LogMessage("LuaOutliner.ReParse error.\r\nPosition : " + ex.TargetSite + "\r\nMessage : " + ex.Message);
+                }
 			}
 		}
 
@@ -107,7 +127,6 @@ namespace Babe.Lua.Intellisense
                 FindHiddenRegions(newSnapshot, tree.Root, ref newRegions);
 
                 FindUserRegions(newSnapshot, tree, ref newRegions);
-
             }
           
             //determine the changed span, and send a changed event with the new spans
@@ -227,13 +246,13 @@ namespace Babe.Lua.Intellisense
 
                 if (token.Category == Irony.Parsing.TokenCategory.Comment)
                 {
-                    if (token.Text.Contains('\n'))//多行注释，折叠
+                    if (token.Text.Contains('\r') || token.Text.Contains('\n'))//多行注释，折叠
                     {
                         region = new Region();
                         region.StartLine = token.Location.Line;
                         region.StartOffset = 0;
-
-                        region.EndLine = token.Location.Line + token.Text.Count(c=>{return c == '\n';});
+                        region.EndLine = snapShot.GetLineFromPosition(token.Location.Position + token.Length).LineNumber;
+                        //region.EndLine = token.Location.Line + token.Text.Count(c=>{return c == '\r';});
 						region.EndOffset = snapShot.GetLineFromLineNumber(region.EndLine).Length;
 
 						region.Preview = snapShot.GetLineFromLineNumber(region.StartLine).GetText().Replace("--[[", "");

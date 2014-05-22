@@ -78,5 +78,7 @@ namespace Boyaa
         public extern static void ClearInitBreakpoints();
         [DllImport("Decoda.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         public extern static void AddInitBreakpoint(string fullPath,int line);
+        [DllImport("Decoda.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
+        public extern static void SetStackLevel(int stackLevel);
     }
 }

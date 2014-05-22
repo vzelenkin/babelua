@@ -27,6 +27,7 @@
 	</SearchFilters>
 	<UISettings>
 		<HideUselessView>0</HideUselessView>
+    <SearchResultRelativePath>0</SearchResultRelativePath>
 	</UISettings>
 	<KeyBinding></KeyBinding>
 	<Highlight>

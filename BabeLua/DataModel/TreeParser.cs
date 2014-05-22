@@ -31,6 +31,11 @@ namespace Babe.Lua.DataModel
 
 					File = new LuaFile(file, tree.Tokens);
 
+                    if((tree.HasErrors() && tree.Root != null) || (!tree.HasErrors() && tree.Root == null))
+                    {
+                        System.Diagnostics.Debugger.Break();
+                    }
+
 					var root = tree.Root;
 					if (root != null)
 					{
@@ -189,7 +194,7 @@ namespace Babe.Lua.DataModel
 							for (int i = 0; i < length; i++)
 							{
 								var name = namelist[i];
-								var exp = explist[i];
+								var exp = explist[i].ChildNodes[0];
 								HandleAssign(name, exp);
 							}
 						}

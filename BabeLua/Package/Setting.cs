@@ -11,7 +11,7 @@ namespace Babe.Lua.Package
 {
 	public static class SettingConstants
 	{
-		public const string Version = "W.1.5.3";
+		public const string Version = "W.1.5.4";
 
 		public const string SettingFolder = "BabeLua";
         public const string CompletionFolder = "Completion";
@@ -39,6 +39,7 @@ namespace Babe.Lua.Package
 
 			public const string UISetting = "UISettings";
 			public const string HideVSView = "HideUselessView";
+            public const string SearchResultRelativePath = "SearchResultRelativePath";
 			public const string AllowLog = "AllowLog";
 
 			public const string Highlight = "Highlight";
@@ -133,6 +134,24 @@ namespace Babe.Lua.Package
 				else Element.Value = Convert.ToInt32(value).ToString();
 			}
 		}
+
+        public bool SearchResultRelativePath
+        {
+            get
+            {
+                var Element = XMLUISettings.Element(SettingConstants.SettingKeys.SearchResultRelativePath);
+                if (Element == null) return false;
+                return Element.Value == "1" ? true : false;
+            }
+            set
+            {
+                var Element = XMLUISettings.Element(SettingConstants.SettingKeys.SearchResultRelativePath);
+                if (Element == null) XMLUISettings.Add(new XElement(SettingConstants.SettingKeys.SearchResultRelativePath, Convert.ToInt32(value)));
+                else Element.Value = Convert.ToInt32(value).ToString();
+
+                BabePackage.WindowManager.SetSearchWndRelativePathEnable(value);
+            }
+        }
 
 		public bool AllowDebugLog
 		{

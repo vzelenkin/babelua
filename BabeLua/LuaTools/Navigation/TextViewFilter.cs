@@ -118,7 +118,7 @@ namespace Microsoft.LuaTools.Language {
                 }
                 catch(Exception e)
                 {
-                    Logger.LogError(e);
+                    Logger.LogMessage("TextViewFilter.GetDataTipText error.");
                 }
             }
             else

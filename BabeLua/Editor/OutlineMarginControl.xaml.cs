@@ -5,6 +5,9 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Babe.Lua.Package;
+using System.Windows.Data;
+using System.Collections;
+using System.ComponentModel;
 
 namespace Babe.Lua.Editor
 {
@@ -15,6 +18,7 @@ namespace Babe.Lua.Editor
     public partial class OutlineMarginControl : UserControl
     {
         IWpfTextViewHost TextViewHost;
+        bool m_navigate = true;
 
         public OutlineMarginControl(IWpfTextViewHost TextViewHost)
         {
@@ -44,9 +48,11 @@ namespace Babe.Lua.Editor
                 ComboBox_Table.ItemsSource = null;
                 ComboBox_Member.ItemsSource = null;
             }
-            else if (ComboBox_Table.ItemsSource != File.Members)
+            else
             {
-                ComboBox_Table.ItemsSource = File.Members;
+                m_navigate = false;
+
+                ComboBox_Table.ItemsSource = CreateListView(File.Members);
 
                 var list = new List<LuaMember>();
                 foreach (var member in File.Members)
@@ -60,7 +66,11 @@ namespace Babe.Lua.Editor
                         list.Add(member);
                     }
                 }
-                ComboBox_Member.ItemsSource = list;
+                
+                ComboBox_Member.ItemsSource = CreateListView(list);
+
+                m_navigate = true;
+                //TextViewHost.TextView.Caret.MoveTo(new Microsoft.VisualStudio.Text.SnapshotPoint(TextViewHost.TextView.TextSnapshot, 0));
             }
         }
 
@@ -99,11 +109,11 @@ namespace Babe.Lua.Editor
 
         private void Combo_Table_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (ComboBox_Table.SelectedItem != null)
+            if (m_navigate && ComboBox_Table.SelectedItem != null)
             {
                 var tb = ComboBox_Table.SelectedItem as LuaMember;
 
-                if(tb is LuaTable) ComboBox_Member.ItemsSource = (tb as LuaTable).Members;
+                if(tb is LuaTable) ComboBox_Member.ItemsSource = CreateListView((tb as LuaTable).Members);
 
 				EditorManager.GoTo(null, tb.Line);
             }
@@ -111,12 +121,20 @@ namespace Babe.Lua.Editor
 
         private void Combo_Member_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (ComboBox_Member.SelectedItem != null)
+            if (m_navigate && ComboBox_Member.SelectedItem != null)
             {
                 var member = ComboBox_Member.SelectedItem as LuaMember;
 
 				EditorManager.GoTo(null, member.Line);
             }
+        }
+
+        private ICollectionView CreateListView(IList list)
+        {
+            var view = new ListCollectionView(list);
+            view.SortDescriptions.Add(new System.ComponentModel.SortDescription("Name", System.ComponentModel.ListSortDirection.Ascending));
+            
+            return view;
         }
     }
 }

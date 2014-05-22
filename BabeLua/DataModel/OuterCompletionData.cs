@@ -34,6 +34,16 @@ namespace Babe.Lua.DataModel
                     this.Members.AddRange(Lf.Members);
                 }
             }
+
+            string[] keywords = {"and","break","do","else","elseif",
+                                "end","false","for","function","if",
+                                "in","local","nil","not","or",
+                                "repeat","return","then","true","until","while"};
+
+            foreach (var str in keywords)
+            {
+                this.Members.Add(new LuaMember(str, -1, -1));
+            }
         }
     }
 }

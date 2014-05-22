@@ -34,14 +34,10 @@
     <RootNamespace>Microsoft.LuaTools</RootNamespace>
     <AssemblyName>BabeLua</AssemblyName>
     <ProjectGuid>{461C68AA-669F-4B8A-883B-367B7BA9D855}</ProjectGuid>
-    <SccProjectName>
-    </SccProjectName>
-    <SccLocalPath>
-    </SccLocalPath>
-    <SccAuxPath>
-    </SccAuxPath>
-    <SccProvider>
-    </SccProvider>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
     <DeployExtension>True</DeployExtension>
     <CreateVsixContainer>True</CreateVsixContainer>
     <StartAction>Program</StartAction>
@@ -223,7 +219,6 @@
     <Compile Include="Grammar\LuaLongStringTerminal.cs" />
     <Compile Include="Grammar\LuaStringLiteral.cs" />
     <Compile Include="Grammar\LuaTerminalNames.cs" />
-    <Compile Include="Helper\CCImporter.cs" />
     <Compile Include="Helper\Logger.cs" />
     <Compile Include="Helper\StringExtension.cs">
       <SubType>Code</SubType>
@@ -271,6 +266,7 @@
     <Compile Include="Editor\FindWordFormatDefination.cs" />
     <Compile Include="Editor\FindWordTag.cs" />
     <Compile Include="Editor\FindWordTagger.cs" />
+    <Compile Include="ToolWindows\BoolVisibilityConventer.cs" />
     <Compile Include="ToolWindows\Controls.cs" />
     <Compile Include="ToolWindows\FolderWindow.xaml.cs">
       <DependentUpon>FolderWindow.xaml</DependentUpon>
@@ -308,9 +304,9 @@
     <Resource Include="Resources\delete.png" />
     <Resource Include="Resources\file.png" />
     <Resource Include="Resources\folder.png" />
+    <Resource Include="Resources\relative.png" />
     <Content Include="Resources\KeyWords.xml" />
     <Resource Include="Resources\search.png" />
-    <Content Include="Resources\search2.png" />
     <Content Include="Resources\Setting.xml" />
     <Content Include="Resources\StdPlugin.ico">
       <IncludeInVSIX>true</IncludeInVSIX>

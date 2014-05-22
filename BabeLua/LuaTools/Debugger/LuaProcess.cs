@@ -1487,6 +1487,23 @@ namespace Microsoft.LuaTools.Debugger {
             evaluationResult.ExecuteText = bExecuteText;
             completion.Completion(evaluationResult);
         }
+        void UpdateStackLevel()
+        {
+            EnvDTE.StackFrame currentStackFrame = BabePackage.Current.DTE.Debugger.CurrentStackFrame;
+            EnvDTE.StackFrames stackFrames = BabePackage.Current.DTE.Debugger.CurrentThread.StackFrames;
+            int stackLevel = 0;
+            int iStackFrameIndex = 0;
+            foreach (EnvDTE.StackFrame stackFrame in stackFrames)
+            {
+                if (stackFrame == currentStackFrame)
+                {
+                    stackLevel = iStackFrameIndex;
+                    break;
+                }
+                iStackFrameIndex++;
+            }
+            Boyaa.LuaDebug.SetStackLevel(stackLevel);
+        }
         internal void ExecuteText(string text, LuaStackFrame luaStackFrame, Action<LuaEvaluationResult> completion)
         {
             int executeId = _ids.Allocate();
@@ -1494,6 +1511,8 @@ namespace Microsoft.LuaTools.Debugger {
             lock (_pendingExecutes) {
                 _pendingExecutes[executeId] = new CompletionInfo(completion, text, luaStackFrame);
             }
+
+            UpdateStackLevel();
 
             StringBuilder type = new StringBuilder(MaxStringBuilderLen);
             StringBuilder value = new StringBuilder(MaxStringBuilderLen);
@@ -1523,6 +1542,8 @@ namespace Microsoft.LuaTools.Debugger {
                 completion = _pendingChildEnums[execId];
                 _pendingChildEnums.Remove(execId);
             }
+
+            UpdateStackLevel();
 
             int iChildrenNum = Boyaa.LuaDebug.EnumChildrenNum(executeId, text);
             LuaEvaluationResult[] res = new LuaEvaluationResult[iChildrenNum];

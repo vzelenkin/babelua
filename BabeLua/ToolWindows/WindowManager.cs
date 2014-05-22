@@ -77,6 +77,18 @@ namespace Babe.Lua.ToolWindows
             }
         }
 
+        public void SetSearchWndRelativePathEnable(bool enable)
+        {
+            if(SearchWndPane1.Current != null)
+            {
+                SearchWndPane1.Current.SetRelativePathEnable(enable);
+            }
+            if(SearchWndPane2.Current != null)
+            {
+                SearchWndPane2.Current.SetRelativePathEnable(enable);
+            }
+        }
+
         public void RefreshOutlineWnd()
         {
             if (OutlineWndPane.Current != null) OutlineWndPane.Current.Refresh();

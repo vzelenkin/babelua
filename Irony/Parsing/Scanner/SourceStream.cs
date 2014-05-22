@@ -143,7 +143,14 @@ namespace Irony.Parsing {
         var curr = _chars[p];
         switch (curr) {
           case '\n': line++; col = 0; break;
-          case '\r': break; 
+          case '\r':
+              //line end with '\r' but not '\r\n'
+              if (p + 1 < _textLength && _chars[p + 1] != '\n')
+              {
+                  line++;
+                  col = 0;
+              }
+              break; 
           //case '\t': col = (col / _tabWidth + 1) * _tabWidth;     break;
           default: col++; break; 
         } //switch

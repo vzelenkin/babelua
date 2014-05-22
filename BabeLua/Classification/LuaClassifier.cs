@@ -118,7 +118,7 @@ namespace Babe.Lua.Classification
 						}
 						else if (token.Category == Irony.Parsing.TokenCategory.Comment)
 						{
-							if (line.Start.Position + token.Location.Position + token.Length == line.End.Position)
+							if (line.Start.Position + token.Location.Position + token.Length <= line.End.Position)
 							{
 								var location = new SnapshotSpan(snapShot, line.Start.Position + token.Location.Position, token.Length);
 								yield return new TagSpan<ClassificationTag>(location, HighlightTag.GetTagWithTokenType(TokenType.Comment));

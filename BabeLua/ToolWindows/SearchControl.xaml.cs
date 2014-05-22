@@ -23,6 +23,8 @@ namespace Babe.Lua.ToolWindows
             current = brush1;
 
             ListView.DragEnter += (s, e) => { };
+
+            Button_RelativePath.IsChecked = BabePackage.Setting.SearchResultRelativePath;
         }
 
         Brush current;
@@ -41,6 +43,10 @@ namespace Babe.Lua.ToolWindows
 
         internal void Refresh(IEnumerable<LuaMember> list)
         {
+            var set = Babe.Lua.Package.BabePackage.Current.CurrentSetting;
+            var pathbase = string.Empty;
+            if (set != null) pathbase = set.Folder;
+
             ListView.Items.Clear();
             int i = 0;
             var brush = GetNextBrush();
@@ -54,7 +60,7 @@ namespace Babe.Lua.ToolWindows
                     curFilePath = item.File.Path;
                 }
 
-                var ltim = new SearchListItem(item, (++i).ToString().PadRight(4));
+                var ltim = new SearchListItem(item, (++i).ToString().PadRight(4), pathbase);
                 ltim.Background = brush;
                 ListView.Items.Add(ltim);
             }
@@ -62,6 +68,10 @@ namespace Babe.Lua.ToolWindows
 
         internal int Refresh(IEnumerable<IEnumerable<LuaMember>> list)
         {
+            var set = Babe.Lua.Package.BabePackage.Current.CurrentSetting;
+            var pathbase = string.Empty;
+            if (set != null) pathbase = set.Folder;
+
             ListView.Items.Clear();
             int i = 0;
             var brush = GetNextBrush();
@@ -77,7 +87,7 @@ namespace Babe.Lua.ToolWindows
                         curFilePath = member.File.Path;
                     }
 
-                    var ltim = new SearchListItem(member, (++i).ToString().PadRight(4));
+                    var ltim = new SearchListItem(member, (++i).ToString().PadRight(4), pathbase);
                     ltim.Background = brush;
                     ListView.Items.Add(ltim);
                 }
@@ -152,6 +162,12 @@ namespace Babe.Lua.ToolWindows
 				Search();
 			}
 		}
+
+        private void Button_RelativePath_Click(object sender, RoutedEventArgs e)
+        {
+            BabePackage.Setting.SearchResultRelativePath = Button_RelativePath.IsChecked.Value;
+            BabePackage.Setting.Save();
+        }
     }
 
     
