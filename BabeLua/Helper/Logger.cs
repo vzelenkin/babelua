@@ -60,10 +60,11 @@ namespace Babe.Lua.Helper
 			try
 			{
 				System.Net.HttpWebRequest req = System.Net.WebRequest.CreateHttp(string.Format("http://babelua.duapp.com/user.php?type={0}&guid={1}&version={2}", type, BabePackage.Setting.UserGUID, SettingConstants.Version));
-				req.Method = "POST";
+
+                req.Method = "POST";
 				req.ContentLength = 0;
 				req.Timeout = 1000;
-				req.BeginGetResponse(null, null);
+                req.BeginGetResponse(null, null);
 				System.Diagnostics.Debug.Print("send user data:" + type);
 			}
 			catch { }

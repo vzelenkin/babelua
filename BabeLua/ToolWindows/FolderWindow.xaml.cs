@@ -829,7 +829,8 @@ namespace Babe.Lua.ToolWindows
 					try
 					{
 						writer.WriteLine(string.Format("--region {0}", Path.GetFileName(path)));
-						writer.WriteLine(string.Format("--Date {0}", System.DateTime.Now.Date.ToShortDateString()));
+                        writer.WriteLine(string.Format("--Author : {0}", Environment.UserName));
+						writer.WriteLine(string.Format("--Date   : {0}", System.DateTime.Now.Date.ToShortDateString()));
 						writer.WriteLine("--此文件由[BabeLua]插件自动生成");
 						writer.WriteLine();
 						writer.WriteLine();

@@ -224,6 +224,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Helper\TextViewExtension.cs" />
+    <Compile Include="Helper\Updater.cs" />
     <Compile Include="Intellisense\CompletionCommandFilter.cs" />
     <Compile Include="Intellisense\LuaCompletion.cs" />
     <Compile Include="Intellisense\LuaCompletionSet.cs" />

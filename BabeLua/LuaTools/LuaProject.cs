@@ -121,6 +121,9 @@ namespace Babe.Lua
         }
         public static bool AddFileLinkToFirstLuaProject(EnvDTE.DTE dte, string file)
         {
+            if (!System.IO.File.Exists(file))
+                return false;
+
             EnvDTE.Project firstLuaProject = GetFirstLuaProject(dte);
             if ((firstLuaProject != null) && (firstLuaProject.Kind.ToUpper() == LuaProjectFactoryGuid))
             {

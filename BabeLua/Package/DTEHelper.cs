@@ -87,6 +87,7 @@ namespace Babe.Lua.Package
             //注册编辑器内容变化通知
             TextViewCreationListener.FileContentChanged += TextViewCreationListener_FileContentChanged;
             Logger.UploadLog();
+            Updater.CheckVersion();
         }
 
         void dteEvents_OnBeginShutdown()

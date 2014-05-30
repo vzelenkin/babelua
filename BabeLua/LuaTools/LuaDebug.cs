@@ -10,7 +10,7 @@ namespace Boyaa
     public delegate void CallbackEventInitialize(int iThreadId);
     public delegate void CallbackEventCreateVM(int iThreadId, int vm);
     public delegate void CallbackEventDestroyVM(int iThreadId, int vm);
-    public delegate void CallbackEventLoadScript(int iThreadId, string fullPath, int scriptIndex);
+    public delegate void CallbackEventLoadScript(int iThreadId, string fullPath, int scriptIndex, int iRelative);
     public delegate void CallbackEventBreak(int iThreadId, string fullPath, int line);
     public delegate void CallbackEventSetBreakpoint(int iThreadId, string fullPath, int line, int enabled);
     public delegate void CallbackEventException(int iThreadId, string fullPath, int line, string msg);

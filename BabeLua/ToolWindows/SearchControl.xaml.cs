@@ -101,11 +101,11 @@ namespace Babe.Lua.ToolWindows
 			var txt = TextBox_SearchWord.Text;
 			if (string.IsNullOrWhiteSpace(txt)) return;
 
-			if (!txt.Any(ch => { return ch.IsWord(); })) return;
+			//if (!txt.Any(ch => { return ch.IsWord(); })) return;
 
-			if (BabePackage.Setting.ContainsSearchFilter(txt)) return;
+			//if (BabePackage.Setting.ContainsSearchFilter(txt)) return;
 
-            BabePackage.WindowManager.RefreshSearchWnd(txt, true);
+            BabePackage.WindowManager.RefreshSearchWnd(txt, true, false);
 		}
 
         private void ListView_MouseDoubleClick(object sender, MouseButtonEventArgs e)

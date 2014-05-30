@@ -329,7 +329,9 @@ namespace Microsoft.LuaTools.Debugger {
             DebugWriteCommand("ResumeAll");
 
             Boyaa.LuaDebug.WritePackageLog("DebugStart()");
+            OutputSend(0, "DEBUG_START");
             Boyaa.LuaDebug.DebugStart();
+            OutputDone(0, "DEBUG_START");
 /*
             lock (_socketLock) {
                 if (_stream != null) {
@@ -540,7 +542,9 @@ namespace Microsoft.LuaTools.Debugger {
             {
                 if (breakpoint.Enabled)
                 {
+                    OutputSend(iThreadId, "ADD_INIT_BREAKPOINT" + " " + breakpoint.File + "(" + breakpoint.FileLine.ToString() + ")");
                     Boyaa.LuaDebug.AddInitBreakpoint(breakpoint.File, breakpoint.FileLine - 1);
+                    OutputDone(iThreadId, "ADD_INIT_BREAKPOINT");
                 }
             }
         }
@@ -548,9 +552,12 @@ namespace Microsoft.LuaTools.Debugger {
         {
             Boyaa.LuaDebug.WritePackageLog("CallbackEventDestroyVM:" + "iThread=" + iThreadId.ToString() + " vm=" + vm.ToString());
         }
-        private void CallbackEventLoadScript(int iThreadId, string file, int scriptIndex)
+        private void CallbackEventLoadScript(int iThreadId, string file, int scriptIndex, int iRelative)
         {
             Boyaa.LuaDebug.WritePackageLog("CallbackEventLoadScript:" + "iThread=" + iThreadId.ToString() + " file=" + file + " scriptIndex=" + scriptIndex.ToString());
+            string relative = (iRelative == 0) ? "" : "  relative";
+            string msg = "Load script(" + scriptIndex.ToString() + "): " + file + relative;
+            OutputEvent(iThreadId,msg);
 
             //如果file是相对路径则转换为绝对路径（根据Working目录生成绝对路径）
             if(!Path.IsPathRooted(file))
@@ -741,11 +748,19 @@ namespace Microsoft.LuaTools.Debugger {
             else
                 OutputEvent(iThreadId, fullPath + "(" + line.ToString() + "):" + msg);
         }
-        private void OutputEvent(int iThreadId, string msg)
+        private void OutputSend(int iThreadId,string cmd)
+        {
+            OutputEvent(iThreadId, "Debug cmd: " + cmd, false, false);
+        }
+        private void OutputDone(int iThreadId,string cmd)
+        {
+            OutputEvent(iThreadId, "  success", true, false);
+        }
+        private void OutputEvent(int iThreadId, string msg,bool enter = true,bool activate = true)
         {
             long tid = iThreadId;// stream.ReadInt64();
             msg = msg.Replace("\n", "");  //删除\n符号，避免msg中包含文件路径（从Decoda返回的含/的文件路径）显示到下一行，双击那条信息会多次打开文件
-            string output = msg+"\r\n";// stream.ReadString();
+            string output = enter ? msg+"\r\n" : msg;// stream.ReadString();
 /*
             LuaThread thread;
             if (_threads.TryGetValue(tid, out thread))
@@ -760,14 +775,20 @@ namespace Microsoft.LuaTools.Debugger {
             {*/
                 const string DEBUG_OUTPUT_PANE_GUID = "{FC076020-078A-11D1-A7DF-00A0C9110051}";
                 EnvDTE.Window window = (EnvDTE.Window)BabePackage.Current.DTE.Windows.Item(EnvDTE.Constants.vsWindowKindOutput);
-                window.Visible = true;
+                if (activate)
+                {
+                    window.Visible = true;
+                }
                 EnvDTE.OutputWindow outputWindow = (EnvDTE.OutputWindow)window.Object;
                 foreach (EnvDTE.OutputWindowPane outputWindowPane in outputWindow.OutputWindowPanes)
                 {
                     if (outputWindowPane.Guid.ToUpper() == DEBUG_OUTPUT_PANE_GUID)
                     {
                         outputWindowPane.OutputString(output);
-                        outputWindowPane.Activate();
+                        if (activate)
+                        {
+                            outputWindowPane.Activate();
+                        }
                     }
                 }
 //            }
@@ -1301,7 +1322,9 @@ namespace Microsoft.LuaTools.Debugger {
             DebugWriteCommand("StepOver");
 
             Boyaa.LuaDebug.WritePackageLog("StepOver()");
+            OutputSend((int)threadId, "STEP_OVER");
             Boyaa.LuaDebug.StepOver();
+            OutputDone((int)threadId, "STEP_OVER");
 /*
             lock (_socketLock) {
                 _stream.Write(StepOverCommandBytes);
@@ -1314,7 +1337,9 @@ namespace Microsoft.LuaTools.Debugger {
             DebugWriteCommand("StepInto");
 
             Boyaa.LuaDebug.WritePackageLog("StepInto()");
+            OutputSend((int)threadId, "STEP_INTO");
             Boyaa.LuaDebug.StepInto();
+            OutputDone((int)threadId, "STEP_INTO");
 /*
             lock (_socketLock) {
                 _stream.Write(StepIntoCommandBytes);
@@ -1377,7 +1402,9 @@ namespace Microsoft.LuaTools.Debugger {
             DebugWriteCommand(String.Format("Bind Breakpoint IsDjango: {0}", breakpoint.IsDjangoBreakpoint));
 
             Boyaa.LuaDebug.WritePackageLog("SetBreakpoint():" + "Filename=" + breakpoint.Filename + " LineNo=" + breakpoint.LineNo.ToString());
+            OutputSend(0, "SET_BREAKPOINT" + " " + breakpoint.Filename + "(" + breakpoint.LineNo.ToString() + ")");
             Boyaa.LuaDebug.SetBreakpoint(breakpoint.Filename, breakpoint.LineNo-1);
+            OutputDone(0, "SET_BREAKPOINT");
 
 /*
             lock (_socketLock) {
@@ -1595,7 +1622,9 @@ namespace Microsoft.LuaTools.Debugger {
             DebugWriteCommand("Disable Breakpoint");
 
             Boyaa.LuaDebug.WritePackageLog("DisableBreakpoint():" + "Filename=" + unboundBreakpoint.Filename + " LineNo=" + unboundBreakpoint.LineNo.ToString());
+            OutputSend(0, "DISABLE_BREAKPOINT" + " " + unboundBreakpoint.Filename + "(" + unboundBreakpoint.LineNo.ToString() + ")");
             Boyaa.LuaDebug.DisableBreakpoint(unboundBreakpoint.Filename, unboundBreakpoint.LineNo - 1);
+            OutputDone(0, "DISABLE_BREAKPOINT");
 /*
             if (_stream != null && _socket.Connected) {
                 lock (_socketLock) {
