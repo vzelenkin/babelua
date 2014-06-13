@@ -162,7 +162,7 @@ namespace Babe.Lua.Intellisense
                             {
                                 continue;
                             }
-                            completions.Add(new Completion(l.Name, l.Name, list.Key + dot + l.ToString() + l.Comment, _provider.GetImageSource(l.GetType()), "icon"));
+                            completions.Add(new Completion(l.Name, l is LuaFunction ? l.ToString() : l.Name, list.Key + dot + l.ToString() + l.Comment, _provider.GetImageSource(l.GetType()), "icon"));
 						}
 					}
                 }
@@ -174,7 +174,7 @@ namespace Babe.Lua.Intellisense
 						{
 							if (l is LuaFunction)
 							{
-                                completions.Add(new Completion(l.Name, l.Name, list.Key + dot + l.ToString() + l.Comment, _provider.GetImageSource(l.GetType()), "icon"));
+                                completions.Add(new Completion(l.Name, l.ToString(), list.Key + dot + l.ToString() + l.Comment, _provider.GetImageSource(l.GetType()), "icon"));
 							}
 						}
 					}

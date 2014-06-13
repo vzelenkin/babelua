@@ -556,14 +556,16 @@ namespace Microsoft.LuaTools.Debugger {
         {
             Boyaa.LuaDebug.WritePackageLog("CallbackEventLoadScript:" + "iThread=" + iThreadId.ToString() + " file=" + file + " scriptIndex=" + scriptIndex.ToString());
             string relative = (iRelative == 0) ? "" : "  relative";
-            string msg = "Load script(" + scriptIndex.ToString() + "): " + file + relative;
+            string fileExist = File.Exists(file) ? "" : "  (file not exist)";
+            string msg = "Load script(" + scriptIndex.ToString() + "): " + file + relative + fileExist;
             OutputEvent(iThreadId,msg);
-
+/*
             //如果file是相对路径则转换为绝对路径（根据Working目录生成绝对路径）
             if(!Path.IsPathRooted(file))
             {
                 file = Path.Combine(Microsoft.LuaTools.Project.DefaultLuaLauncher.TextWorking, file);
             }
+*/
             if (!File.Exists(file))
                 return;
 

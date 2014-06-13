@@ -47,7 +47,7 @@ namespace Boyaa
         [DllImport("Decoda.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         public extern static int WritePackageLog(string log);
         [DllImport("Decoda.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
-        public extern static uint StartProcess(string command,string commandArguments,string workingDirectory,string symbolsDirectory);
+        public extern static uint StartProcess(string command,string commandArguments,string workingDirectory,string symbolsDirectory,string scriptsDirectory);
         [DllImport("Decoda.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         public extern static void DebugStart();
         [DllImport("Decoda.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]

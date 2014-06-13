@@ -754,7 +754,8 @@ namespace Microsoft.LuaTools.Debugger.DebugEngine {
             _process.LuaDebugSetCallback();
             AttachEvents(_process);
             Boyaa.LuaDebug.WritePackageLog("StartProcess():" + "exe=" + exe + " args=" + args + " dir=" + dir);
-            uint processId = Boyaa.LuaDebug.StartProcess(exe,args,dir,"");
+            string scriptsDirectory = BabePackage.Current.CurrentSetting.Folder;
+            uint processId = Boyaa.LuaDebug.StartProcess(exe, args, dir, "", scriptsDirectory);
             if(processId == 0)
             {
                 MessageBox.Show(string.Format("Error starting process \r\n{0}", exe), null, MessageBoxButtons.OK, MessageBoxIcon.Error);
