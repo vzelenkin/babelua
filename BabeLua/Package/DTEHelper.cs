@@ -120,6 +120,21 @@ namespace Babe.Lua.Package
 			errorProvider.Tasks.Add(newError);
 		}
 
+        public void OutputWindowWriteLine(string text)
+        {
+            const string DEBUG_OUTPUT_PANE_GUID = "{FC076020-078A-11D1-A7DF-00A0C9110051}";
+            EnvDTE.Window window = (EnvDTE.Window)BabePackage.Current.DTE.Windows.Item(EnvDTE.Constants.vsWindowKindOutput);
+            window.Visible = true;
+            EnvDTE.OutputWindow outputWindow = (EnvDTE.OutputWindow)window.Object;
+            foreach (EnvDTE.OutputWindowPane outputWindowPane in outputWindow.OutputWindowPanes)
+            {
+                if (outputWindowPane.Guid.ToUpper() == DEBUG_OUTPUT_PANE_GUID)
+                {
+                    outputWindowPane.OutputString(text + "\r\n");
+                }
+            }
+        }
+
         public StatusBar GetStatusBar()
         {
             return DTE.StatusBar;

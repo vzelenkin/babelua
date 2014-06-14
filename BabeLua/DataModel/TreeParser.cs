@@ -43,7 +43,8 @@ namespace Babe.Lua.DataModel
 					}
 					else
 					{
-						System.Diagnostics.Debug.Print("***********error***********" + file);
+						//System.Diagnostics.Debug.Print("***********error***********" + file);
+                        BabePackage.DTEHelper.OutputWindowWriteLine(file + "  has syntax error(s).");
 					}
 
 					FileManager.Instance.AddFile(File);

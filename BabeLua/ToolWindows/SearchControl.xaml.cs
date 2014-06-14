@@ -105,7 +105,10 @@ namespace Babe.Lua.ToolWindows
 
 			//if (BabePackage.Setting.ContainsSearchFilter(txt)) return;
 
-            BabePackage.WindowManager.RefreshSearchWnd(txt, true, false);
+            //fixme:here should use setting item.
+            bool caseSensitive = true;
+
+            BabePackage.WindowManager.RefreshSearchWnd(txt, true, caseSensitive, false);
 		}
 
         private void ListView_MouseDoubleClick(object sender, MouseButtonEventArgs e)
@@ -136,13 +139,20 @@ namespace Babe.Lua.ToolWindows
 		private void Button_ClearResult_Click(object sender, RoutedEventArgs e)
 		{
 			ListView.Items.Clear();
-            BabePackage.WindowManager.RefreshSearchWnd("", false);
+            BabePackage.WindowManager.RefreshSearchWnd("", false, true);
 		}
 
 		private void Button_Search_Click(object sender, RoutedEventArgs e)
 		{
 			Search();
 		}
+
+        private void Button_SearchSelect_Click(object sender, RoutedEventArgs e)
+        { 
+            //fixme:here should use setting item.
+            bool caseSensitive = true;
+            EditorManager.SearchSelect(true, false, caseSensitive);
+        }
 
 		private void Button_CopyAllResult_Click(object sender, RoutedEventArgs e)
 		{

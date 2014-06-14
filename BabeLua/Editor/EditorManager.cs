@@ -188,21 +188,24 @@ namespace Babe.Lua.Editor
             EditorMarginProvider.CurrentMargin.OpenRightOutline();
         }
 
-        public static void FindSelectTokenReferences(bool AllFiles)
+        public static void SearchSelect(bool AllFiles, bool WholeWordMatch, bool CaseSensitive)
         {
+            if (TextViewCreationListener.TextView == null) return;
             if (TextViewCreationListener.TextView.Selection == null) return;
             var spans = TextViewCreationListener.TextView.Selection.SelectedSpans;
             if (spans.Count > 1) return;
             var txt = TextViewCreationListener.TextView.TextSnapshot.GetText(spans[0]);
             if (string.IsNullOrWhiteSpace(txt)) return;
 
-            if (!txt.All(ch => { return ch.IsWord(); })) return;
-
             if (BabePackage.Setting.ContainsSearchFilter(txt)) return;
 
-            HighlightPosition(spans[0].Start, spans[0].Length);
+            if (WholeWordMatch)
+            {
+                if (!txt.All(ch => { return ch.IsWord(); })) return;
+                HighlightPosition(spans[0].Start, spans[0].Length);
+            }
 
-            BabePackage.WindowManager.RefreshSearchWnd(txt, AllFiles);
+            BabePackage.WindowManager.RefreshSearchWnd(txt, AllFiles, CaseSensitive, WholeWordMatch);
         }
     }
 }

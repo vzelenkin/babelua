@@ -77,6 +77,9 @@
             <Button Width="20" Background="{x:Null}" BorderBrush="{x:Null}" ToolTip="search in all files" Click="Button_Search_Click">
                 <Image Source="/BabeLua;component/Resources/search.png"/>
             </Button>
+            <Button Width="20" Background="{x:Null}" BorderBrush="{x:Null}" ToolTip="search select text in all files" Click="Button_SearchSelect_Click">
+                <Image Source="/BabeLua;component/Resources/search2.png"/>
+            </Button>
         </StackPanel>
     </Grid>
 </UserControl>

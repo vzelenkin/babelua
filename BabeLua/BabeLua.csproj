@@ -308,6 +308,7 @@
     <Resource Include="Resources\relative.png" />
     <Content Include="Resources\KeyWords.xml" />
     <Resource Include="Resources\search.png" />
+    <Resource Include="Resources\search2.png" />
     <Content Include="Resources\Setting.xml" />
     <Content Include="Resources\StdPlugin.ico">
       <IncludeInVSIX>true</IncludeInVSIX>

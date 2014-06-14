@@ -51,7 +51,7 @@ namespace Babe.Lua.ToolWindows
             }
         }
 
-        public void RefreshSearchWnd(string txt, bool AllFile, bool WholeWordMatch = true)
+        public void RefreshSearchWnd(string txt, bool AllFile, bool CaseSensitive, bool WholeWordMatch = true)
         {
             if (CurrentSearchWnd == null)
             {
@@ -73,7 +73,7 @@ namespace Babe.Lua.ToolWindows
                      () => ShowSearchWindow2()
                     );
                 }
-                CurrentSearchWnd.Search(txt, AllFile, WholeWordMatch);
+                CurrentSearchWnd.Search(txt, AllFile, WholeWordMatch, CaseSensitive);
             }
         }
 

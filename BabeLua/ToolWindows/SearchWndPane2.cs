@@ -36,7 +36,7 @@ namespace Babe.Lua.ToolWindows
             Current = this;
         }
 
-        public void Search(string txt, bool AllFile, bool WholeWordMatch = true)
+        public void Search(string txt, bool AllFile, bool WholeWordMatch, bool CaseSensitive)
         {
             wnd.Dispatcher.Invoke(() =>
             {
@@ -56,7 +56,7 @@ namespace Babe.Lua.ToolWindows
                     }
                     else
                     {
-                        var list = FileManager.Instance.Search(txt, AllFile);
+                        var list = FileManager.Instance.Search(txt, AllFile, CaseSensitive);
                         wnd.Refresh(list);
                         count = list.Count;
                     }

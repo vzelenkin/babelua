@@ -97,12 +97,12 @@ namespace Babe.Lua.Editor
             }
             else if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
             {
-				EditorManager.FindSelectTokenReferences(false);
+				EditorManager.SearchSelect(false, true, true);
                 //DTEHelper.Current.OpenDocument(DTEHelper.Current.DTE.ActiveDocument.FullName);
             }
             else if (Keyboard.IsKeyDown(Key.LeftAlt) || Keyboard.IsKeyDown(Key.RightAlt))
             {
-				EditorManager.FindSelectTokenReferences(true);
+				EditorManager.SearchSelect(true, true, true);
                 //DTEHelper.Current.OpenDocument(DTEHelper.Current.DTE.ActiveDocument.FullName);
             }
         }

@@ -133,11 +133,15 @@ namespace Babe.Lua.Intellisense
             {
                 completions.Add(new LuaCompletion(
                     show : s.Name, 
-                    completion : s.Name, 
+                    completion : s is LuaFunction ? s.ToString() : s.Name, 
                     description : s.GetType().Name + " : " + s.ToString() + s.Comment, 
                     icon : _provider.GetImageSource(s.GetType())
                     ));
             }
+
+#if DEBUG
+            System.Diagnostics.Debug.Print("fill items:" + (completions.Count - count));
+#endif
 
             return completions.Count > count;
         }
@@ -180,16 +184,35 @@ namespace Babe.Lua.Intellisense
 					}
                 }
             }
-			//else //找不到table。拿文件单词进行提示。
-			//{
-			//	var tokens = IntellisenseHelper.GetFileTokens();
-			//	foreach (LuaMember lm in tokens)
-			//	{
-			//		completions.Add(new Completion(lm.Name, lm.Name, lm.Name, null, "icon"));
-			//	}
-			//}
+            else //找不到table。拿文件单词进行提示。
+            {
+                var snapshot = _buffer.CurrentSnapshot;
+                var tokens = IntellisenseHelper.GetFileTokens();
+                foreach (LuaMember lm in tokens)
+                {
+                    var point = LineAndColumnNumberToSnapshotPoint(snapshot, lm.Line, lm.Column);
+                    if (point > 0)
+                    {
+                        char preview = snapshot[point - 1];
+                        if (preview == '.' || preview == ':')
+                        {
+                            completions.Add(new Completion(lm.Name, lm.Name, lm.Name, _provider.GetImageSource(lm.GetType()), "icon"));
+                        }
+                    }
+                }
+            }
 
+#if DEBUG
+            System.Diagnostics.Debug.Print("fill items:" + (completions.Count - count));
+#endif
             return completions.Count > count;
+        }
+
+        private static SnapshotPoint LineAndColumnNumberToSnapshotPoint(ITextSnapshot snapshot, int lineNumber, int columnNumber)
+        {
+            var line = snapshot.GetLineFromLineNumber(lineNumber);
+            var snapshotPoint = new SnapshotPoint(snapshot, line.Start + columnNumber);
+            return snapshotPoint;
         }
 
         public void Dispose()

@@ -112,7 +112,7 @@ namespace Babe.Lua.DataModel
 		}
 
         #region Search Methods
-        public List<LuaMember> SearchInFile(LuaFile file, string keyword)
+        public List<LuaMember> SearchInFile(LuaFile file, string keyword, bool CaseSensitive)
 		{
 			List<LuaMember> members = new List<LuaMember>();
 
@@ -120,7 +120,9 @@ namespace Babe.Lua.DataModel
 			{
 				try
 				{
-					System.Text.RegularExpressions.Regex reg = new System.Text.RegularExpressions.Regex(System.Text.RegularExpressions.Regex.Escape(keyword));
+                    var options = System.Text.RegularExpressions.RegexOptions.None;
+                    if (!CaseSensitive) options = System.Text.RegularExpressions.RegexOptions.IgnoreCase;
+					System.Text.RegularExpressions.Regex reg = new System.Text.RegularExpressions.Regex(System.Text.RegularExpressions.Regex.Escape(keyword), options);
 					
 					List<string> lines = new List<string>();
 					using (StreamReader sr = new StreamReader(file.Path))
@@ -164,7 +166,7 @@ namespace Babe.Lua.DataModel
 			return members;
 		}
 
-		public List<LuaMember> Search(string keyword, bool AllFile)
+		public List<LuaMember> Search(string keyword, bool AllFile, bool CaseSensitive)
 		{
 			List<LuaMember> results = new List<LuaMember>();
 			if (!AllFile)
@@ -179,7 +181,7 @@ namespace Babe.Lua.DataModel
 				//	results.Add(lm);
 				//}
 				BabePackage.DTEHelper.DTE.ActiveDocument.Save();
-				results = SearchInFile(CurrentFile, keyword);
+				results = SearchInFile(CurrentFile, keyword, CaseSensitive);
 			}
 			else
 			{
@@ -211,7 +213,7 @@ namespace Babe.Lua.DataModel
 				for (int i = 0; i < Files.Count; i++)
 				{
 					//if (OpenFiles.Contains(Files[i].File)) continue;
-					results.AddRange(SearchInFile(Files[i], keyword));
+					results.AddRange(SearchInFile(Files[i], keyword, CaseSensitive));
 				}
 			}
 
