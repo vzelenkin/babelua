@@ -90,6 +90,8 @@ namespace Babe.Lua.Editor
 			view.GotAggregateFocus -= view_GotAggregateFocus;
 
 			System.Diagnostics.Debug.Print("document close");
+
+            GCHelper.Collect();
 		}
 
 		void view_GotAggregateFocus(object sender, EventArgs e)

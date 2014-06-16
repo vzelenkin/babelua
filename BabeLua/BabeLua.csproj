@@ -219,6 +219,7 @@
     <Compile Include="Grammar\LuaLongStringTerminal.cs" />
     <Compile Include="Grammar\LuaStringLiteral.cs" />
     <Compile Include="Grammar\LuaTerminalNames.cs" />
+    <Compile Include="Helper\GCHelper.cs" />
     <Compile Include="Helper\Logger.cs" />
     <Compile Include="Helper\StringExtension.cs">
       <SubType>Code</SubType>
@@ -564,6 +565,9 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <DefineConstants>TRACE;DEV11;DEV11_OR_LATER;VER_INNER;</DefineConstants>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+    <CodeAnalysisIgnoreGeneratedCode>false</CodeAnalysisIgnoreGeneratedCode>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>

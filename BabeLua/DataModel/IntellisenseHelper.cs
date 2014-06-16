@@ -84,6 +84,7 @@ namespace Babe.Lua.DataModel
                 BabePackage.DTEHelper.GetStatusBar().Progress(false);
 
                 BabePackage.WindowManager.RefreshOutlineWnd();
+                //Babe.Lua.Helper.GCHelper.Collect();
 			}
         }
 
