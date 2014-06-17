@@ -187,7 +187,10 @@ namespace Babe.Lua.Intellisense
             else //找不到table。拿文件单词进行提示。
             {
                 var snapshot = _buffer.CurrentSnapshot;
-                var tokens = IntellisenseHelper.GetFileTokens();
+				var tokens = FileManager.Instance.CurrentFileToken;
+
+				var tempTable = new HashSet<String>();
+
                 foreach (LuaMember lm in tokens)
                 {
                     var point = LineAndColumnNumberToSnapshotPoint(snapshot, lm.Line, lm.Column);
@@ -196,7 +199,9 @@ namespace Babe.Lua.Intellisense
                         char preview = snapshot[point - 1];
                         if (preview == '.' || preview == ':')
                         {
-                            completions.Add(new Completion(lm.Name, lm.Name, lm.Name, _provider.GetImageSource(lm.GetType()), "icon"));
+							if (tempTable.Contains(lm.Name)) continue;
+							tempTable.Add(lm.Name);
+							completions.Add(new Completion(lm.Name, lm.Name, lm.Name, _provider.GetImageSource(lm.GetType()), "icon"));
                         }
                     }
                 }
