@@ -25,7 +25,7 @@ namespace Babe.Lua.Classification
         }
     }
 
-    internal sealed class LuaSyntaxErrorTagger : ITagger<LuaErrorTag>
+    internal sealed class LuaSyntaxErrorTagger : ITagger<LuaErrorTag>, IDisposable
     {
         ITextBuffer buffer;
         List<Irony.Parsing.Token> errorTokens = new List<Irony.Parsing.Token>();
@@ -130,6 +130,11 @@ namespace Babe.Lua.Classification
                     }
                 }
             }
+        }
+
+        public void Dispose()
+        {
+            Babe.Lua.Editor.TextViewCreationListener.FileContentChanged -= TextViewCreationListener_FileContentChanged;
         }
     }
 

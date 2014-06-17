@@ -26,7 +26,7 @@ namespace Babe.Lua.Intellisense
         } 
     }
         
-    internal sealed class OutliningTagger : ITagger<IOutliningRegionTag>
+    internal sealed class OutliningTagger : ITagger<IOutliningRegionTag>, IDisposable
     {
         string ellipsis = "...";    //the characters that are displayed when the region is collapsed
         ITextBuffer buffer;
@@ -312,6 +312,11 @@ namespace Babe.Lua.Intellisense
             public int EndOffset { get; set; }
             public string Preview { get; set; }
             public bool IsCollapsed { get; set; }
+        }
+
+        public void Dispose()
+        {
+            Babe.Lua.Editor.TextViewCreationListener.FileContentChanged -= TextViewCreationListener_FileContentChanged;
         }
     }
 }
