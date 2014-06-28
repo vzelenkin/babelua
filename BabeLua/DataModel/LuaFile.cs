@@ -70,5 +70,10 @@ namespace Babe.Lua.DataModel
         {
             return System.IO.Path.GetFileName(Path);
         }
+
+        public override int GetHashCode()
+        {
+            return Path.GetHashCode();
+        }
     }
 }

@@ -155,7 +155,7 @@ namespace Babe.Lua.DataModel
                                         }
                                         else
                                         {
-                                            luatable.Members.Add(new LuaMember(token.ValueString, token.Location.Line, token.Location.Column) { Comment = GetComment(var) });
+                                            luatable.Members.Add(new LuaMember(File, token.ValueString, token.Location.Line, token.Location.Column) { Comment = GetComment(var) });
                                         }
                                         //AddMemToTable(tbname, mename);
                                     }
@@ -264,7 +264,7 @@ namespace Babe.Lua.DataModel
 									}
 									else
 									{
-                                        File.Members.Add(new LuaMember(var.Token) { Comment = GetComment(var) });
+                                        File.Members.Add(new LuaMember(File, var.Token) { Comment = GetComment(var) });
 									}
 
 					//if (func == Babe.Lua.BabePackage.Setting.ClassDefinition || func == Babe.Lua.BabePackage.Setting.ClassConstructor)
@@ -280,7 +280,7 @@ namespace Babe.Lua.DataModel
 			}
 			else
 			{
-                File.Members.Add(new LuaMember(var.Token) { Comment = GetComment(var) });
+                File.Members.Add(new LuaMember(File, var.Token) { Comment = GetComment(var) });
 			}
 		}
 
@@ -304,7 +304,7 @@ namespace Babe.Lua.DataModel
                         {
                             table.Members.Add(HandleNamelessFunction(field.ChildNodes[0].Token, GetComment(field), exp));
                         }
-                        else table.Members.Add(new LuaMember(field.ChildNodes[0].Token) { Comment = GetComment(field) });
+                        else table.Members.Add(new LuaMember(File, field.ChildNodes[0].Token) { Comment = GetComment(field) });
                     }
                     else if (field.ChildNodes.Count == 5)//[expr] = xxx
                     {
@@ -315,7 +315,7 @@ namespace Babe.Lua.DataModel
                             {
                                 table.Members.Add(HandleNamelessFunction(expr.ChildNodes[0].Token, GetComment(field), exp));
                             }
-                            else table.Members.Add(new LuaMember(expr.ChildNodes[0].Token) { Comment = GetComment(expr) });
+                            else table.Members.Add(new LuaMember(File, expr.ChildNodes[0].Token) { Comment = GetComment(expr) });
                         }
                     }
                 }
@@ -366,20 +366,20 @@ namespace Babe.Lua.DataModel
                 {
                     //AddMemToTable(name1, part2.ChildNodes[0].ChildNodes[1].Token.ValueString);
                     var table = File.GetTable(name1.ValueString);
-                    if (table != null) table.Members.Add(new LuaFunction(part2.ChildNodes[0].ChildNodes[1].Token.ValueString, name1.Location.Line, args) { Comment = comment });
+                    if (table != null) table.Members.Add(new LuaFunction(File, part2.ChildNodes[0].ChildNodes[1].Token.ValueString, name1.Location.Line, args) { Comment = comment });
                 }
             }
             else if (part2.ChildNodes.Count == 0 && part3.ChildNodes.Count == 2)
             {
                 //AddMemToTable(name1, part3.ChildNodes[1].Token.ValueString);
                 var table = File.GetTable(name1.ValueString);
-                if (table != null) table.Members.Add(new LuaFunction(part3.ChildNodes[1].Token.ValueString, name1.Location.Line, args) { Comment = comment });
+                if (table != null) table.Members.Add(new LuaFunction(File, part3.ChildNodes[1].Token.ValueString, name1.Location.Line, args) { Comment = comment });
             }
         }
 
         LuaFunction HandleNamelessFunction(Token name, string comment, ParseTreeNode node)
         {
-            var function = new LuaFunction(name.ValueString, name.Location.Line, GetFunctionArgs(node.ChildNodes[1])) { Comment = comment };
+            var function = new LuaFunction(File, name.ValueString, name.Location.Line, GetFunctionArgs(node.ChildNodes[1])) { Comment = comment };
             return function;
         }
 

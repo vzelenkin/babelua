@@ -134,7 +134,8 @@ namespace Babe.Lua.Intellisense
                 completions.Add(new LuaCompletion(
                     show : s.Name, 
                     completion : s is LuaFunction ? s.ToString() : s.Name, 
-                    description : s.GetType().Name + " : " + s.ToString() + s.Comment, 
+                    description : string.Format("{0} {1}{2}", s.ToString(), GetMemberPath(s), s.Comment),
+                    //description : s.GetType().Name + " : " + s.ToString() + " in file: " + s.File + s.Comment, 
                     icon : _provider.GetImageSource(s.GetType())
                     ));
             }
@@ -166,7 +167,12 @@ namespace Babe.Lua.Intellisense
                             {
                                 continue;
                             }
-                            completions.Add(new Completion(l.Name, l is LuaFunction ? l.ToString() : l.Name, list.Key + dot + l.ToString() + l.Comment, _provider.GetImageSource(l.GetType()), "icon"));
+                            completions.Add(new Completion(
+                                l.Name, 
+                                l is LuaFunction ? l.ToString() : l.Name, 
+                                string.Format("{0}{1}{2} {3}{4}", list.Key, dot, l.ToString(), GetMemberPath(l), l.Comment),
+                                //list.Key + dot + l.ToString() + l.Comment, 
+                                _provider.GetImageSource(l.GetType()), "icon"));
 						}
 					}
                 }
@@ -178,7 +184,12 @@ namespace Babe.Lua.Intellisense
 						{
 							if (l is LuaFunction)
 							{
-                                completions.Add(new Completion(l.Name, l.ToString(), list.Key + dot + l.ToString() + l.Comment, _provider.GetImageSource(l.GetType()), "icon"));
+                                completions.Add(new Completion(
+                                    l.Name, 
+                                    l.ToString(),
+                                    string.Format("{0}{1}{2} {3}{4}", list.Key, dot, l.ToString(), GetMemberPath(l), l.Comment),
+                                    //list.Key + dot + l.ToString() + l.Comment, 
+                                    _provider.GetImageSource(l.GetType()), "icon"));
 							}
 						}
 					}
@@ -201,7 +212,12 @@ namespace Babe.Lua.Intellisense
                         {
 							if (tempTable.Contains(lm.Name)) continue;
 							tempTable.Add(lm.Name);
-							completions.Add(new Completion(lm.Name, lm.Name, lm.Name, _provider.GetImageSource(lm.GetType()), "icon"));
+							completions.Add(new Completion(
+                                lm.Name, 
+                                lm.Name, 
+                                string.Format("{0} {1}", lm.Name, GetMemberPath(lm)),
+                                //lm.Name, 
+                                _provider.GetImageSource(lm.GetType()), "icon"));
                         }
                     }
                 }
@@ -218,6 +234,12 @@ namespace Babe.Lua.Intellisense
             var line = snapshot.GetLineFromLineNumber(lineNumber);
             var snapshotPoint = new SnapshotPoint(snapshot, line.Start + columnNumber);
             return snapshotPoint;
+        }
+
+        private string GetMemberPath(LuaMember member)
+        {
+            if (member.File == null) return string.Empty;
+            else return string.Format("in file: {0}", member.File.Path);
         }
 
         public void Dispose()

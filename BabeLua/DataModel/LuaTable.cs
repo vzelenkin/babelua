@@ -10,14 +10,9 @@ namespace Babe.Lua.DataModel
     {
         public List<LuaMember> Members { get; private set; }
 
-        public LuaTable(string name, int line) : base(name,line,0) 
-        {
-            Members = new List<LuaMember>();
-        }
-
-		public LuaTable(LuaFile file, string name, int line):this(name,line)
+		public LuaTable(LuaFile file, string name, int line):base(file, name,line, 0)
 		{
-			this.File = file;
+            Members = new List<LuaMember>();
 		}
 
 		public LuaTable(LuaFile file, string basetable, string name, int line)

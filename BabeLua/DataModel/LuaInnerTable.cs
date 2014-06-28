@@ -23,7 +23,7 @@ namespace Babe.Lua.DataModel
             string[] global = { "assert", "collectgarbage", "dofile", "error", "getfenv", "getmetatable", "ipairs", "load", "loadfile", "loadstring", "module", "next", "pairs", "pcall", "print", "rawequal", "rawget", "rawset", "require", "select", "setfenv", "setmetatable", "tonumber", "tostring", "type", "unpack", "xpcall", "class", "new", "delete" };
             foreach (var str in global)
             {
-                this.Members.Add(new LuaFunction(str, -1, null));
+                this.Members.Add(new LuaFunction(this, str, -1, null));
             }
 
             var tbs = new Dictionary<string, HashSet<string>>();
@@ -39,10 +39,10 @@ namespace Babe.Lua.DataModel
 
             foreach (var tb in tbs)
             {
-                LuaTable lt = new LuaTable(tb.Key, -1);
+                LuaTable lt = new LuaTable(this, tb.Key, -1);
                 foreach (var st in tb.Value)
                 {
-                    lt.Members.Add(new LuaFunction(st, -1, null));
+                    lt.Members.Add(new LuaFunction(this, st, -1, null));
                 }
                 this.AddTable(lt);
             }
@@ -54,7 +54,7 @@ namespace Babe.Lua.DataModel
 
             foreach (var str in keywords)
             {
-                this.Members.Add(new LuaMember(str,-1,-1));
+                this.Members.Add(new LuaMember(this, str,-1,-1));
             }
         }
 

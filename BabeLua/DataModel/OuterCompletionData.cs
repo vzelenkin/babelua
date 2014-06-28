@@ -42,7 +42,7 @@ namespace Babe.Lua.DataModel
 
             foreach (var str in keywords)
             {
-                this.Members.Add(new LuaMember(str, -1, -1));
+                this.Members.Add(new LuaMember(null, str, -1, -1));
             }
         }
     }

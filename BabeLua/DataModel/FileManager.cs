@@ -96,7 +96,7 @@ namespace Babe.Lua.DataModel
 				foreach (var token in CurrentFile.Tokens)
 				{
 					if (token.Category == Irony.Parsing.TokenCategory.Content && token.Terminal.Name == LuaTerminalNames.Identifier)
-						CurrentFileToken.Add(new LuaMember(token));
+						CurrentFileToken.Add(new LuaMember(CurrentFile, token));
 				}
 			}
 		}
@@ -138,9 +138,8 @@ namespace Babe.Lua.DataModel
 						var match = reg.Match(lines[i]);
 						while (match.Success)
 						{
-							var lm = new LuaMember(keyword, i, match.Index);
+							var lm = new LuaMember(file, keyword, i, match.Index);
 							lm.Preview = lines[i];
-							lm.File = file;
 							members.Add(lm);
 							match = match.NextMatch();
 						}
@@ -284,7 +283,6 @@ namespace Babe.Lua.DataModel
             {
                 if (TryMatch(lm, keyword, 0, out result))
                 {
-                    result.File = file;
                     return true;
                 }
             }
@@ -351,9 +349,8 @@ namespace Babe.Lua.DataModel
                     {
                         if (token.ValueString.Equals(keyword) && lines[token.Location.Line].Contains(keyword))
                         {
-                            var lmp = new LuaMember(token);
+                            var lmp = new LuaMember(file, token);
                             lmp.Preview = lines[lmp.Line];
-                            lmp.File = file;
                             yield return lmp;
                         }
                     }
@@ -364,9 +361,8 @@ namespace Babe.Lua.DataModel
                         if (index != -1)
                         {
 
-                            var lmp = new LuaMember(keyword, token.Location.Line, token.Location.Column + 1 + index);
+                            var lmp = new LuaMember(file, keyword, token.Location.Line, token.Location.Column + 1 + index);
                             lmp.Preview = lines[lmp.Line];
-                            lmp.File = file;
                             yield return lmp;
                         }
                     }
