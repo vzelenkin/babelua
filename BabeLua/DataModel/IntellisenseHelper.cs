@@ -24,15 +24,25 @@ namespace Babe.Lua.DataModel
         static bool isBreak = false;
         static Thread _thread;
 
+        //static FileSystemWatcher FileWatcher = new FileSystemWatcher();
+
         public static void Scan()
         {
             var set = BabePackage.Current.CurrentSetting;
 
             if (set == null || string.IsNullOrWhiteSpace(set.Folder) || !Directory.Exists(set.Folder))
             {
+                //FileWatcher.EnableRaisingEvents = false;
                 FileManager.ClearData();
                 return;
             }
+
+            //FileWatcher.Filter = "*.lua";
+            //FileWatcher.IncludeSubdirectories = true;
+            //FileWatcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite;
+            //FileWatcher.Changed += FileWatcher_Changed;
+            //FileWatcher.Path = set.Folder;
+            //FileWatcher.EnableRaisingEvents = true;
 
             Stop();
 
@@ -40,6 +50,13 @@ namespace Babe.Lua.DataModel
 			_thread.IsBackground = true;
             _thread.Start();
         }
+
+        //static void FileWatcher_Changed(object sender, FileSystemEventArgs e)
+        //{
+        //    if (!File.Exists(e.FullPath)) return;
+        //    if (!FileManager.Files.Contains(new LuaFile(e.FullPath, null))) return;
+        //    new TreeParser().HandleFile(e.FullPath);
+        //}
 
         public static void Stop()
         {
@@ -84,7 +101,7 @@ namespace Babe.Lua.DataModel
                 BabePackage.DTEHelper.GetStatusBar().Progress(false);
 
                 BabePackage.WindowManager.RefreshOutlineWnd();
-                //Babe.Lua.Helper.GCHelper.Collect();
+                GC.Collect();
 			}
         }
 

@@ -349,7 +349,7 @@ namespace Babe.Lua.DataModel
                 {
                     if (token.EditorInfo == null || token.EditorInfo.Type != Irony.Parsing.TokenType.String)
                     {
-                        if (token.ValueString.Equals(keyword))
+                        if (token.ValueString.Equals(keyword) && lines[token.Location.Line].Contains(keyword))
                         {
                             var lmp = new LuaMember(token);
                             lmp.Preview = lines[lmp.Line];
