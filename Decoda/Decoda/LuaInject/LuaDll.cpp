@@ -495,7 +495,10 @@ int DecodaOutputWorker(unsigned long api, lua_State* L, bool& stdcall)
     stdcall = g_interfaces[api].stdcall;
 
     const char* message = lua_tostring_dll(api, L, 1);
-    DebugBackend::Get().Message(message);
+//  DebugBackend::Get().Message(message);
+	std::string outputMessage = "[LUA print] ";
+	outputMessage += message;
+	DebugBackend::Get().Message(outputMessage.c_str());
     
     return 0;
 

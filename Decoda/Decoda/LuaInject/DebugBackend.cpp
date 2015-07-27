@@ -28,6 +28,7 @@ along with Decoda.  If not, see <http://www.gnu.org/licenses/>.
 #include "StlUtility.h"
 #include "XmlUtility.h"
 #include "DebugHelp.h"
+#include "BabeLua.h"
 
 #include <assert.h>
 #include <algorithm>
@@ -295,6 +296,8 @@ bool DebugBackend::Initialize(HINSTANCE hInstance)
     m_eventChannel.WriteUInt32(EventId_Initialize);
     m_eventChannel.WriteUInt32(reinterpret_cast<unsigned int>(FinishInitialize));
     m_eventChannel.Flush();
+
+	SetOutputPackagePath(true);
 
     return true;
 
@@ -595,6 +598,20 @@ int DebugBackend::RegisterScript(lua_State* L, const char* source, size_t size, 
 
     size_t length = strlen(name);
 
+	if(IsOutputPackagePath())
+	{
+		SetOutputPackagePath(false);
+		
+		unsigned long api = GetApiForVm(L);
+		std::string packagePath = ::GetPackagePath(L,api);
+
+		std::string message;
+		message = "\npackage.path: ";
+		message += packagePath;
+		message += "\n";
+		Message(message.c_str());
+	}
+
     // Check if the file name is actually the source. This happens when calling
     // luaL_loadstring and doesn't make for a very good display.
     if (source != NULL && strncmp(name, source, length) == 0)
@@ -606,7 +623,7 @@ int DebugBackend::RegisterScript(lua_State* L, const char* source, size_t size, 
     else
     {
     
-        fileName = name;
+		fileName = name;
 
         // Remove the @ sign in front of file names when we pass it to the UI.
         if (fileName[0] == '@')
@@ -614,6 +631,30 @@ int DebugBackend::RegisterScript(lua_State* L, const char* source, size_t size, 
             fileName.erase(0, 1);
         }
 
+		if(::PathIsRelative(fileName.c_str()))
+		{
+			std::string message;
+
+			message = "\nrelative: ";
+			message += fileName;
+			Message(message.c_str());
+
+			unsigned long api = GetApiForVm(L);
+			std::string packagePath = ::GetPackagePath(L,api);
+			std::string filePath = fileName;
+			if(BabeFindFile(fileName.c_str(),packagePath.c_str(),filePath))
+			{
+				char szFullPath[MAX_PATH];
+				char* pFullPath = (char*)szFullPath;
+				char **lppPart = &pFullPath;
+				::GetFullPathNameA(filePath.c_str(),MAX_PATH,szFullPath,lppPart);
+
+				fileName = szFullPath;
+			}
+			message = "findfile: ";
+			message += fileName;
+			Message(message.c_str());
+		}
     }
 
     CodeState state = CodeState_Normal;
@@ -781,7 +822,7 @@ void DebugBackend::HookCallback(unsigned long api, lua_State* L, lua_Debug* ar)
 
     // Log for debugging.
     //LogHookEvent(api, L, ar);
-
+/*
     //Only try to downgrade the hook when the debugger is not stepping   
     if(m_mode == Mode_Continue)
     {
@@ -797,7 +838,7 @@ void DebugBackend::HookCallback(unsigned long api, lua_State* L, lua_Debug* ar)
         //Force UpdateHookMode to recheck the call stack for functions with breakpoints when switching back to Mode_Continue
         vm->breakpointInStack = true;
     }
-
+*/
     if (ar->event == LUA_HOOKLINE)
     {
 

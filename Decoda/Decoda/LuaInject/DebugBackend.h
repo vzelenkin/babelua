@@ -34,6 +34,7 @@ along with Decoda.  If not, see <http://www.gnu.org/licenses/>.
 #include <hash_set>
 #include <hash_map>
 
+#define MAX_DEPTH	2
 //
 // Forward declarations.
 //
@@ -334,7 +335,7 @@ private:
      * Gets the value at location n on the stack as text. If expandTable is true
      * then tables will be returned in their expanded form (i.e. "{ ... }")
      */
-    TiXmlNode* GetValueAsText(unsigned long api, lua_State* L, int n, int maxDepth = 10, const char* typeNameOverride = NULL, bool displayAsKey = false) const;
+    TiXmlNode* GetValueAsText(unsigned long api, lua_State* L, int n, int maxDepth = MAX_DEPTH, const char* typeNameOverride = NULL, bool displayAsKey = false) const;
 
     /**
      * Gets the value at location n on the stack as text. If expandTable is true
@@ -346,7 +347,7 @@ private:
      * Gets the table value at location n on the stack as text. Nested tables are
      * not expanded.
      */
-    TiXmlNode* GetTableAsText(unsigned long api, lua_State* L, int t, int maxDepth = 10, const char* typeNameOverride = NULL) const;
+    TiXmlNode* GetTableAsText(unsigned long api, lua_State* L, int t, int maxDepth = MAX_DEPTH, const char* typeNameOverride = NULL) const;
 
     /**
      * Returns true if the name belongs to a Lua internal variable that we

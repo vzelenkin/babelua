@@ -51,6 +51,9 @@
     <ClCompile Include="Shared\StlUtility.cpp">
       <Filter>Shared</Filter>
     </ClCompile>
+    <ClCompile Include="LuaInject\BabeLua.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="LuaInject\DebugBackend.h">
@@ -92,5 +95,12 @@
     <ClInclude Include="Shared\StlUtility.h">
       <Filter>Shared</Filter>
     </ClInclude>
+    <ClInclude Include="LuaInject\BabeLua.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="resource1.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="LuaInject.rc" />
   </ItemGroup>
 </Project>

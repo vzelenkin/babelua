@@ -35,17 +35,6 @@ along with Decoda.  If not, see <http://www.gnu.org/licenses/>.
 #include "CriticalSection.h"
 #include "LineMapper.h"
 
-class CEventList
-{
-public:
-	void PushEvent(wxEvent &event);
-	wxEvent* PopEvent();
-protected:
-	std::list<wxEvent*>			m_eventList;
-
-	mutable CriticalSection     m_criticalSection;
-};
-
 /**
  * Frontend for the debugger.
  */
@@ -97,7 +86,6 @@ public:
      * Set the event handler for messages from the client.
      */
 //    void SetEventHandler(wxEvtHandler* eventHandler);
-	void SetEventList(CEventList* eventList);
 	DWORD GetProcessId();
 
     /**
@@ -338,7 +326,6 @@ private:
     HANDLE                      m_process;
 
 //    wxEvtHandler*               m_eventHandler;
-//	CEventList*					m_eventList;
 
     Channel                     m_eventChannel;
     HANDLE                      m_eventThread;

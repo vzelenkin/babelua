@@ -31,27 +31,6 @@ along with Decoda.  If not, see <http://www.gnu.org/licenses/>.
 #include "..\\Decoda.h"
 
 
-void CEventList::PushEvent(wxEvent &event)
-{
-	CriticalSectionLock lock(m_criticalSection);
-
-	wxEvent *pEvent = event.Clone();
-	m_eventList.push_back(pEvent);
-}
-
-wxEvent* CEventList::PopEvent()
-{
-	CriticalSectionLock lock(m_criticalSection);
-
-	if(m_eventList.size() <= 0)
-		return NULL;
-
-	wxEvent *pEvent = m_eventList.front();
-	m_eventList.pop_front();
-	return pEvent;
-}
-
-
 DebugFrontend* DebugFrontend::s_instance = NULL;
 
 DebugFrontend& DebugFrontend::Get()
@@ -74,7 +53,6 @@ DebugFrontend::DebugFrontend()
     m_processId     = 0;
     m_process       = NULL;
 //    m_eventHandler  = NULL;
-//	m_eventList		= NULL;
     m_eventThread   = NULL;
     m_state         = State_Inactive;
 }
@@ -90,10 +68,6 @@ void DebugFrontend::SetEventHandler(wxEvtHandler* eventHandler)
     m_eventHandler = eventHandler;
 }
 */
-void DebugFrontend::SetEventList(CEventList* eventList)
-{
-//	m_eventList = eventList;
-}
 
 DWORD DebugFrontend::GetProcessId()
 {
@@ -794,7 +768,7 @@ void DebugFrontend::RemoveAllBreakPoints(unsigned int vm)
 DebugFrontend::Script* DebugFrontend::GetScript(unsigned int scriptIndex)
 {
     CriticalSectionLock lock(m_criticalSection);
-    if (scriptIndex == -1)
+	if ((scriptIndex < 0) || (scriptIndex >= m_scripts.size()))//(scriptIndex == -1)
     {
         return NULL;
     }
